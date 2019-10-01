@@ -36,16 +36,17 @@ num_results = len(results)
 if num_results == 0:
     print_err("\nNo matching pass-name found")
     exit(1)
-elif num_results > 1:
-    print_err("\nFound %d pass-names:" % num_results)
+else:
+    print_err("\nFound %d pass-name(s):" % num_results)
     for f in results:
         print_err(f)
-    print_err("\nTry adding more words to narrow down.")
-    exit(1)
-else:
-    cmd_array = ["pass", "show"]
-    cmd_array.extend(options)
-    cmd_array.extend(results)
-    cmd = " ".join(cmd_array)
-    print_err("\nRunning '%s' ...\n" % cmd)
-    exit(os.system(cmd))
+    if num_results == 1:
+        cmd_array = ["pass", "show"]
+        cmd_array.extend(options)
+        cmd_array.extend(results)
+        cmd = " ".join(cmd_array)
+        print_err("\nRunning '%s' ..." % cmd)
+        exit(os.system(cmd))
+    else:
+        print_err("\nTry adding more words to narrow down.")
+        exit(1)
