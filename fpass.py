@@ -46,7 +46,7 @@ else:
         cmd_array.extend(results)
         cmd = " ".join(cmd_array)
         print_err("\nRunning '%s' ..." % cmd)
-        exit(os.system(cmd))
+        exit(os.system(cmd) >> 8)
     else:
         print_err("\nTry adding more words to narrow down.")
         exit(1)
