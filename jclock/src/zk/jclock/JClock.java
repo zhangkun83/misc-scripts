@@ -26,10 +26,11 @@ public class JClock extends JFrame {
   private JClock() {
     // This will make the window skip the window switcher and on all virtual desktops
     setType(Type.UTILITY);
-    setLayout(new FlowLayout());
-    getContentPane().setBackground(Color.YELLOW);
+    setLayout(new FlowLayout(FlowLayout.CENTER, 2, 2));
+    getContentPane().setBackground(Color.BLACK);
     content = new JLabel("");
     content.setFont(new Font(Font.MONOSPACED, Font.BOLD, 12));
+    content.setForeground(Color.GREEN);
     add(content);
 
     setDefaultCloseOperation(DISPOSE_ON_CLOSE);
