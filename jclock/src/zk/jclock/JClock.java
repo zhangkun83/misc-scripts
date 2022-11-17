@@ -38,6 +38,8 @@ public class JClock extends JFrame {
     setUndecorated(true);
     setResizable(false);
     addEventsForDragging();
+    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+    setLocation(new Point((int) (screenSize.getWidth() * 3 / 4), 0));
     setVisible(true);
     ContentUpdater updater = new ContentUpdater();
     updater.update();
