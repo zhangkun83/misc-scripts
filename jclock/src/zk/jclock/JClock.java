@@ -29,7 +29,7 @@ public class JClock extends JFrame {
     setLayout(new FlowLayout(FlowLayout.CENTER, 2, 2));
     getContentPane().setBackground(Color.BLACK);
     content = new JLabel("");
-    content.setFont(new Font(Font.MONOSPACED, Font.BOLD, 12));
+    content.setFont(new Font(getFontForSystem(), Font.BOLD, 12));
     content.setForeground(Color.GREEN);
     add(content);
 
@@ -69,6 +69,17 @@ public class JClock extends JFrame {
           setLocation(point); // set the new location
         }
       });
+  }
+
+  private static String getFontForSystem() {
+    String os = System.getProperty("os.name").toLowerCase();
+    if (os.indexOf("win") >= 0) {
+      return "Courier New";
+    } else if (os.indexOf("linux") >= 0) {
+      return "Terminus";
+    } else {
+      return Font.MONOSPACED;
+    }
   }
 
   private static double cap(double value, double min, double max) {
