@@ -76,7 +76,7 @@ public class JClock extends JFrame {
     if (os.indexOf("win") >= 0) {
       return "Courier New";
     } else if (os.indexOf("linux") >= 0) {
-      return "Terminus";
+      return "Noto Mono";
     } else {
       return Font.MONOSPACED;
     }
