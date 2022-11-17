@@ -90,7 +90,7 @@ public class JClock extends JFrame {
     }
 
     void update() {
-      String formatString = showColon ? "HH:mm" : "HH mm";
+      String formatString = showColon ? "hh:mm" : "hh mm";
       content.setText(
           new SimpleDateFormat(formatString).format(new Date()));
       pack();
