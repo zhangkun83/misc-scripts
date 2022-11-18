@@ -40,10 +40,13 @@ public class JClock extends JFrame {
     addEventsForDragging();
     Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
     setLocation(new Point((int) (screenSize.getWidth() * 3 / 4), 0));
-    setVisible(true);
+  }
+
+  private void start() {
     ContentUpdater updater = new ContentUpdater();
     updater.update();
     new Timer(1000, updater).start();
+    setVisible(true);
   }
 
   private void addEventsForDragging() {
@@ -59,7 +62,8 @@ public class JClock extends JFrame {
         @Override
         public void mouseDragged(MouseEvent e) {
           Point point = e.getLocationOnScreen();
-          point.translate(-mouseClickPoint.x, -mouseClickPoint.y); // Moves the point by given values from its location
+          // Moves the point by given values from its location
+          point.translate(-mouseClickPoint.x, -mouseClickPoint.y);
           // Make sure the whole frame is visible
           Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
           Dimension size = getBounds().getSize();
@@ -111,5 +115,6 @@ public class JClock extends JFrame {
 
   public static void main(String[] args) {
     JClock instance = new JClock();
+    instance.start();
   }
 }
