@@ -14,6 +14,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.Timer;
 
 /**
@@ -37,7 +39,7 @@ public class JClock extends JFrame {
     setAlwaysOnTop(true);
     setUndecorated(true);
     setResizable(false);
-    addEventsForDragging();
+    addMouseEvents();
     Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
     setLocation(new Point((int) (screenSize.getWidth() * 3 / 4), 0));
   }
@@ -49,14 +51,22 @@ public class JClock extends JFrame {
     setVisible(true);
   }
 
-  private void addEventsForDragging() {
-    // Here is the code does moving
+  private void addMouseEvents() {
+    final JPopupMenu menu = new JPopupMenu();
+    JMenuItem miClose = new JMenuItem("Close");
+    miClose.addActionListener((e) -> System.exit(0));
+    menu.add(miClose);
     addMouseListener(new MouseAdapter() {
         @Override
         public void mousePressed(MouseEvent e) {
           mouseClickPoint = e.getPoint(); // update the position
         }
-
+        @Override
+        public void mouseReleased(MouseEvent e) {
+          if(e.isPopupTrigger()) {
+            menu.show(e.getComponent(), e.getX(), e.getY());
+          }
+        }
       });
     addMouseMotionListener(new MouseAdapter() {
         @Override
