@@ -59,10 +59,19 @@ public class JClock extends JFrame {
     addMouseListener(new MouseAdapter() {
         @Override
         public void mousePressed(MouseEvent e) {
+          maybeShowMenu(e);
+          mouseClickPoint = e.getPoint(); // update the position
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+          maybeShowMenu(e);
+        }
+
+        private void maybeShowMenu(MouseEvent e) {
           if (e.isPopupTrigger()) {
             menu.show(e.getComponent(), e.getX(), e.getY());
           }
-          mouseClickPoint = e.getPoint(); // update the position
         }
       });
     addMouseMotionListener(new MouseAdapter() {
