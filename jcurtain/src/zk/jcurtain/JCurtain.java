@@ -1,4 +1,4 @@
-package zk.jdosboxcurtain;
+package zk.jcurtain;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -11,36 +11,19 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
 /**
- * A Curtain to cover up the white areas on the left and right of jdosbox.
+ * A Curtain to block off rectangular areas on the screen.
  */
-public class JdosboxCurtain extends JFrame {
-  private enum Side {
-    LEFT, RIGHT
-  }
-
-  private JdosboxCurtain(Side side) {
+public class JCurtain extends JFrame {
+  private JCurtain(int x, int y, int width, int height) {
     // This will make the window skip the window switcher and on all virtual desktops
     setType(Type.UTILITY);
     getContentPane().setBackground(Color.BLACK);
-
     setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     setAlwaysOnTop(true);
     setUndecorated(true);
+    setLocation(new Point(x, y));
+    setSize(width, height);
     setResizable(false);
-    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-    int screenWidth = (int) screenSize.getWidth();
-    int screenHeight = (int) screenSize.getHeight();
-    int jdosboxWidth = screenHeight / 3 * 4;
-    int curtainWidth = (screenWidth - jdosboxWidth) / 2;
-    switch (side) {
-      case LEFT:
-        setLocation(new Point(0, 0));
-        break;
-      case RIGHT:
-        setLocation(new Point(curtainWidth + jdosboxWidth, 0));
-        break;
-    }
-    setSize(curtainWidth, screenHeight);
     addMouseEvents();
     setVisible(true);
   }
@@ -71,7 +54,24 @@ public class JdosboxCurtain extends JFrame {
 
 
   public static void main(String[] args) {
-    JdosboxCurtain left = new JdosboxCurtain(Side.LEFT);
-    JdosboxCurtain right = new JdosboxCurtain(Side.RIGHT);
+    if (args.length == 0) {
+      Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+      int screenWidth = (int) screenSize.getWidth();
+      int screenHeight = (int) screenSize.getHeight();
+      int jdosboxWidth = screenHeight / 3 * 4;
+      int curtainWidth = (screenWidth - jdosboxWidth) / 2;
+      JCurtain left = new JCurtain(0, 0, curtainWidth, screenHeight);
+      JCurtain right = new JCurtain(curtainWidth + jdosboxWidth, 0, curtainWidth, screenHeight);
+    } else {
+      for (String arg : args) {
+        String[] split = arg.split(":");
+        JCurtain curtain =
+            new JCurtain(
+                Integer.parseInt(split[0]),
+                Integer.parseInt(split[1]),
+                Integer.parseInt(split[2]),
+                Integer.parseInt(split[3]));
+      }
+    }
   }
 }
