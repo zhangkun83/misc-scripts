@@ -75,11 +75,11 @@ public class JClock extends JFrame {
   private void setAlarm() {
     String input = alarmNotifier.alarm.format(dateTimeFormatterShort);
     if (alarmNotifier.alarmExpired()) {
-      input = LocalDateTime.now().plusMinutes(30).format(dateTimeFormatterShort);
+      input = "+30";
     }
     while (true) {
       input = JOptionPane.showInputDialog(
-          this, "Set alarm in the format of HH:MM or +MM", input);
+          null, "Set alarm in the format of \"HH:MM\", \"+MM\", or \":MM\"", input);
       if (input == null) {
         return;
       }
@@ -87,28 +87,39 @@ public class JClock extends JFrame {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime newAlarm;
         if (input.startsWith("+")) {
+          // Relative minutes
           int deltaMinutes = Integer.parseInt(input.substring(1));
           newAlarm = now.plusMinutes(deltaMinutes);
+        } else if (input.startsWith(":")) {
+          // Minute part only
+          int minutePart = Integer.parseInt(input.substring(1));
+          newAlarm = LocalDateTime.of(
+              now.getYear(), now.getMonth(), now.getDayOfMonth(),
+              now.getHour(), minutePart);
+          if (minutePart <= now.getMinute()) {
+            // If the minute is in the past, set into the next hour
+            newAlarm = newAlarm.plusHours(1);
+          }
         } else {
-          newAlarm = LocalDateTime.parse(
-              now.format(dateTimeFormatterDate) + " " + input, dateTimeFormatterFull);
-          if (newAlarm.compareTo(now.minusHours(1)) < 0) {
-            if (JOptionPane.showConfirmDialog(
-                    this,
-                    "The alarm will be set to tomorrow at " + input + ". Are you sure?",
-                    "Set Alarm",
-                    JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
-              newAlarm = newAlarm.plusDays(1);
-            } else {
-              return;
-            }
+          // Hour and minute
+          String[] split = input.split(":");
+          int hourPart = Integer.parseInt(split[0]);
+          int minutePart = Integer.parseInt(split[1]);
+          newAlarm = LocalDateTime.of(
+              now.getYear(), now.getMonth(), now.getDayOfMonth(),
+              hourPart, minutePart);
+          // If the time of day is in the past, set into the next day
+          if (newAlarm.compareTo(now) < 0) {
+            newAlarm = newAlarm.plusDays(1);
           }
         }
         alarmNotifier.alarm = newAlarm;
+        JOptionPane.showMessageDialog(
+            null, "Alarm set to " + formatTimeForDisplay(newAlarm, now));
         return;
       } catch (Exception e) {
         JOptionPane.showMessageDialog(
-            this, "Invalid time format: " + e.getMessage(), "Set Alarm", JOptionPane.ERROR_MESSAGE);
+            null, "Malformed input", "Set Alarm", JOptionPane.ERROR_MESSAGE);
       }
     }
   }
@@ -124,16 +135,31 @@ public class JClock extends JFrame {
       dateString = formattedDate;
     }
     long deltaMinutes = Duration.between(now, time).toMinutes();
+    long deltaAbsMinutes = Math.abs(deltaMinutes);
+    long deltaMinPart = deltaAbsMinutes % 60;
+    long deltaHourPart = deltaAbsMinutes / 60;
+    String deltaString = "";
+    if (deltaMinPart > 0) {
+      deltaString = Long.toString(deltaMinPart) + "m";
+    }
+    if (deltaHourPart > 0) {
+      deltaString = Long.toString(deltaHourPart) + "h" + deltaString;
+    }
+    if (deltaMinPart >= 0) {
+      deltaString = "+" + deltaString;
+    } else {
+      deltaString = "-" + deltaString;
+    }
     return String.format(
-        "%s %s (%+dm)",
-        dateString, dateTimeFormatterShort.format(time), deltaMinutes);
+        "%s %s (%s)",
+        dateString, dateTimeFormatterShort.format(time), deltaString);
   }
 
   private void addMouseEvents() {
     final JPopupMenu menu = new JPopupMenu();
-    JMenuItem miSetAlarm = new JMenuItem("Set Alarm");
+    JMenuItem miSetAlarm = new JMenuItem("Set Alarm ...");
     miSetAlarm.addActionListener((e) -> setAlarm());
-    JMenuItem miClose = new JMenuItem("Close");
+    JMenuItem miClose = new JMenuItem("Quit");
     miClose.addActionListener((e) -> System.exit(0));
     menu.add(miSetAlarm);
     menu.add(alarmDisplay);
