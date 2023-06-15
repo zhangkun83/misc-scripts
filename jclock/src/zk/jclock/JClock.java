@@ -74,6 +74,9 @@ public class JClock extends JFrame {
 
   private void setAlarm() {
     String input = alarmNotifier.alarm.format(dateTimeFormatterShort);
+    if (alarmNotifier.alarmExpired()) {
+      input = LocalDateTime.now().plusMinutes(30).format(dateTimeFormatterShort);
+    }
     while (true) {
       input = JOptionPane.showInputDialog(this, "Set Alarm", input);
       if (input == null) {
