@@ -10,6 +10,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -66,10 +70,15 @@ public class JClock extends JFrame {
   private void start() {
     ContentUpdater updater = new ContentUpdater();
     updater.update();
+    try {
+      alarmNotifier.alarm = readTimeFromFile();
+    } catch (IOException e) {
+      e.printStackTrace();
+      setAlarm();
+    }
     new Timer(1000, updater).start();
     new Timer(750, alarmNotifier).start();
     setVisible(true);
-    setAlarm();
   }
 
   private void setAlarm() {
@@ -114,6 +123,7 @@ public class JClock extends JFrame {
           }
         }
         alarmNotifier.alarm = newAlarm;
+        writeTimeToFile(newAlarm);
         JOptionPane.showMessageDialog(
             null, "Alarm set to " + formatTimeForDisplay(newAlarm, now));
         return;
@@ -223,6 +233,19 @@ public class JClock extends JFrame {
       value = max;
     }
     return value;
+  }
+
+  private static Path getAlarmDataFilePath() {
+    return Paths.get(System.getProperty("user.home"), ".jclock-alarm");
+  }
+
+  private static LocalDateTime readTimeFromFile() throws IOException {
+    String content = new String(Files.readAllBytes(getAlarmDataFilePath()));
+    return LocalDateTime.parse(content, dateTimeFormatterFull);
+  }
+
+  private static void writeTimeToFile(LocalDateTime time) throws IOException {
+    Files.write(getAlarmDataFilePath(), time.format(dateTimeFormatterFull).getBytes());
   }
 
   private class ContentUpdater implements ActionListener {
