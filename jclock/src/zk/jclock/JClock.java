@@ -1,6 +1,7 @@
 package zk.jclock;
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -43,7 +44,6 @@ public class JClock extends JFrame {
   private final JLabel content;
   private final JMenuItem alarmDisplay;
   private final AlarmNotifier alarmNotifier = new AlarmNotifier();
-  private Point mouseClickPoint; // Will reference to the last pressing (not clicking) position
 
   private JClock() {
     // This will make the window skip the window switcher and on all virtual desktops
@@ -177,14 +177,23 @@ public class JClock extends JFrame {
     menu.addSeparator();
     menu.add(miClose);
     MouseAdapter mouseListener = new MouseAdapter() {
+        boolean isDragging = false;
+        Point mouseClickPoint; // Will reference to the last pressing (not clicking) position
+
         @Override
         public void mousePressed(MouseEvent e) {
+          if (e.getButton() == MouseEvent.BUTTON1) {
+            isDragging = true;
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+          }
           maybeShowMenu(e);
           mouseClickPoint = e.getPoint(); // update the position
         }
 
         @Override
         public void mouseReleased(MouseEvent e) {
+          isDragging = false;
+          setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
           maybeShowMenu(e);
         }
 
@@ -193,10 +202,12 @@ public class JClock extends JFrame {
             menu.show(e.getComponent(), e.getX(), e.getY());
           }
         }
-      };
-    MouseAdapter mouseMotionListener = new MouseAdapter() {
+
         @Override
         public void mouseDragged(MouseEvent e) {
+          if (!isDragging) {
+            return;
+          }
           Point point = e.getLocationOnScreen();
           // Moves the point by given values from its location
           point.translate(-mouseClickPoint.x, -mouseClickPoint.y);
@@ -210,9 +221,9 @@ public class JClock extends JFrame {
         }
       };
     addMouseListener(mouseListener);
-    addMouseMotionListener(mouseMotionListener);
+    addMouseMotionListener(mouseListener);
     content.addMouseListener(mouseListener);
-    content.addMouseMotionListener(mouseMotionListener);
+    content.addMouseMotionListener(mouseListener);
   }
 
   private static String getFontForSystem() {
