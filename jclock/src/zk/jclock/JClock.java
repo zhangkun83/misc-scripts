@@ -11,9 +11,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.Date;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -78,28 +78,35 @@ public class JClock extends JFrame {
       input = LocalDateTime.now().plusMinutes(30).format(dateTimeFormatterShort);
     }
     while (true) {
-      input = JOptionPane.showInputDialog(this, "Set Alarm", input);
+      input = JOptionPane.showInputDialog(
+          this, "Set alarm in the format of HH:MM or +MM", input);
       if (input == null) {
         return;
       }
       try {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime newAlarm = LocalDateTime.parse(
-            now.format(dateTimeFormatterDate) + " " + input, dateTimeFormatterFull);
-        if (newAlarm.compareTo(now.minusHours(1)) < 0) {
-          if (JOptionPane.showConfirmDialog(
-                  this,
-                  "The alarm will be set to tomorrow at " + input + ". Are you sure?",
-                  "Set Alarm",
-                  JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
-            newAlarm = newAlarm.plusDays(1);
-          } else {
-            return;
+        LocalDateTime newAlarm;
+        if (input.startsWith("+")) {
+          int deltaMinutes = Integer.parseInt(input.substring(1));
+          newAlarm = now.plusMinutes(deltaMinutes);
+        } else {
+          newAlarm = LocalDateTime.parse(
+              now.format(dateTimeFormatterDate) + " " + input, dateTimeFormatterFull);
+          if (newAlarm.compareTo(now.minusHours(1)) < 0) {
+            if (JOptionPane.showConfirmDialog(
+                    this,
+                    "The alarm will be set to tomorrow at " + input + ". Are you sure?",
+                    "Set Alarm",
+                    JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+              newAlarm = newAlarm.plusDays(1);
+            } else {
+              return;
+            }
           }
         }
         alarmNotifier.alarm = newAlarm;
         return;
-      } catch (DateTimeParseException e) {
+      } catch (Exception e) {
         JOptionPane.showMessageDialog(
             this, "Invalid time format: " + e.getMessage(), "Set Alarm", JOptionPane.ERROR_MESSAGE);
       }
@@ -116,7 +123,10 @@ public class JClock extends JFrame {
     } else {
       dateString = formattedDate;
     }
-    return dateString + " " + dateTimeFormatterShort.format(time);
+    long deltaMinutes = Duration.between(now, time).toMinutes();
+    return String.format(
+        "%s %s (%+dm)",
+        dateString, dateTimeFormatterShort.format(time), deltaMinutes);
   }
 
   private void addMouseEvents() {
