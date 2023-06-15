@@ -144,7 +144,8 @@ public class JClock extends JFrame {
     } else {
       dateString = formattedDate;
     }
-    long deltaMinutes = Duration.between(now, time).toMinutes();
+    Duration delta = Duration.between(now, time);
+    long deltaMinutes = delta.toMinutes();
     long deltaAbsMinutes = Math.abs(deltaMinutes);
     long deltaMinPart = deltaAbsMinutes % 60;
     long deltaHourPart = deltaAbsMinutes / 60;
@@ -155,10 +156,10 @@ public class JClock extends JFrame {
     if (deltaHourPart > 0) {
       deltaString = Long.toString(deltaHourPart) + "h" + deltaString;
     }
-    if (deltaMinPart >= 0) {
-      deltaString = "+" + deltaString;
-    } else {
+    if (delta.isNegative()) {
       deltaString = "-" + deltaString;
+    } else {
+      deltaString = "+" + deltaString;
     }
     return String.format(
         "%s %s (%s)",
