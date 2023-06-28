@@ -68,6 +68,7 @@ public class JClock extends JFrame {
   }
 
   private void start() {
+    setVisible(true);
     ContentUpdater updater = new ContentUpdater();
     updater.update();
     try {
@@ -78,7 +79,6 @@ public class JClock extends JFrame {
     }
     new Timer(1000, updater).start();
     new Timer(750, alarmNotifier).start();
-    setVisible(true);
   }
 
   private void setAlarm() {
@@ -209,14 +209,10 @@ public class JClock extends JFrame {
             return;
           }
           Point point = e.getLocationOnScreen();
-          // Moves the point by given values from its location
+          // Keep the mouse pointer at the position relative to the window
           point.translate(-mouseClickPoint.x, -mouseClickPoint.y);
           // Make sure the whole frame is visible
-          Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-          Dimension size = getBounds().getSize();
-          point.setLocation(
-              cap(point.getX(), 0, screenSize.getWidth() - size.getWidth()),
-              cap(point.getY(), 0, screenSize.getHeight() - size.getHeight()));
+          point = adjustWindowLocationForVisibility(point);
           setLocation(point); // set the new location
         }
       };
@@ -224,6 +220,18 @@ public class JClock extends JFrame {
     addMouseMotionListener(mouseListener);
     content.addMouseListener(mouseListener);
     content.addMouseMotionListener(mouseListener);
+  }
+
+  /**
+   * Adjust the given point, representing the location of the window, if necessary to keep the
+   * entirety of the window on the screen.
+   */
+  private Point adjustWindowLocationForVisibility(Point p) {
+    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+    Dimension size = getBounds().getSize();
+    return new Point(
+        (int) (cap(p.getX(), 0, screenSize.getWidth() - size.getWidth())),
+        (int) (cap(p.getY(), 0, screenSize.getHeight() - size.getHeight())));
   }
 
   private static String getFontForSystem() {
@@ -276,6 +284,13 @@ public class JClock extends JFrame {
       showColon = !showColon;
       alarmDisplay.setText(
           "Alarm: " + formatTimeForDisplay(alarmNotifier.alarm, LocalDateTime.now()));
+
+      // Make sure the window is still visible (in case screen resolution has changed etc).
+      Point location = getLocationOnScreen();
+      Point adjustedLocation = adjustWindowLocationForVisibility(location);
+      if (!location.equals(adjustedLocation)) {
+        setLocation(adjustedLocation);
+      }
     }
   }
 
