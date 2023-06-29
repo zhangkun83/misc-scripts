@@ -140,9 +140,9 @@ public class JClock extends JFrame {
     if (formattedDate.equals(dateTimeFormatterDate.format(now))) {
       dateString = "";
     } else if (formattedDate.equals(dateTimeFormatterDate.format(now.plusDays(1)))) {
-      dateString = "Tomorrow";
+      dateString = "tomorrow ";
     } else {
-      dateString = formattedDate;
+      dateString = formattedDate + " ";
     }
     Duration delta = Duration.between(now, time);
     long deltaMinutes = delta.toMinutes();
@@ -162,7 +162,7 @@ public class JClock extends JFrame {
       deltaString = "+" + deltaString;
     }
     return String.format(
-        "%s %s (%s)",
+        "%s%s (%s)",
         dateString, dateTimeFormatterShort.format(time), deltaString);
   }
 
