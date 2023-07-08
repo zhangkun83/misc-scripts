@@ -54,8 +54,9 @@ public class JCurtain extends JFrame {
 
 
   public static void main(String[] args) {
+    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+    System.err.println("Screen size: " + screenSize);
     if (args.length == 0) {
-      Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
       int screenWidth = (int) screenSize.getWidth();
       int screenHeight = (int) screenSize.getHeight();
       int jdosboxWidth = screenHeight / 3 * 4;
