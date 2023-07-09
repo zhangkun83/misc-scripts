@@ -238,6 +238,8 @@ public class JClock extends JFrame {
     String os = System.getProperty("os.name").toLowerCase();
     if (os.indexOf("win") >= 0) {
       return "Courier New";
+    } else if (os.indexOf("mac") >= 0) {
+      return "Courier New";
     } else if (os.indexOf("linux") >= 0) {
       return "Noto Mono";
     } else {
