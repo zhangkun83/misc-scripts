@@ -6,6 +6,7 @@ import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -14,10 +15,10 @@ import javax.swing.JPopupMenu;
  * A Curtain to block off rectangular areas on the screen.
  */
 public class JCurtain extends JFrame {
-  private JCurtain(int x, int y, int width, int height) {
+  private JCurtain(int x, int y, int width, int height, Color color) {
     // This will make the window skip the window switcher and on all virtual desktops
     setType(Type.UTILITY);
-    getContentPane().setBackground(Color.BLACK);
+    getContentPane().setBackground(color);
     setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     setAlwaysOnTop(true);
     setUndecorated(true);
@@ -56,22 +57,40 @@ public class JCurtain extends JFrame {
   public static void main(String[] args) {
     Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
     System.err.println("Screen size: " + screenSize);
-    if (args.length == 0) {
+    ArrayList<String> posArgs = new ArrayList<String>();
+    ArrayList<String> flags = new ArrayList<String>();
+    for (String arg : args) {
+      if (arg.startsWith("--")) {
+        flags.add(arg);
+      } else {
+        posArgs.add(arg);
+      }
+    }
+    Color color = Color.BLACK;
+    for (String flag : flags) {
+      if (flag.startsWith("--color=")) {
+        String colorString = flag.substring("--color=".length());
+        color = Color.decode(colorString);
+      }
+    }
+    if (posArgs.isEmpty()) {
       int screenWidth = (int) screenSize.getWidth();
       int screenHeight = (int) screenSize.getHeight();
       int jdosboxWidth = screenHeight / 3 * 4;
       int curtainWidth = (screenWidth - jdosboxWidth) / 2;
-      JCurtain left = new JCurtain(0, 0, curtainWidth, screenHeight);
-      JCurtain right = new JCurtain(curtainWidth + jdosboxWidth, 0, curtainWidth, screenHeight);
+      JCurtain left = new JCurtain(0, 0, curtainWidth, screenHeight, color);
+      JCurtain right =
+          new JCurtain(curtainWidth + jdosboxWidth, 0, curtainWidth, screenHeight, color);
     } else {
-      for (String arg : args) {
+      for (String arg : posArgs) {
         String[] split = arg.split(":");
         JCurtain curtain =
             new JCurtain(
                 Integer.parseInt(split[0]),
                 Integer.parseInt(split[1]),
                 Integer.parseInt(split[2]),
-                Integer.parseInt(split[3]));
+                Integer.parseInt(split[3]),
+                color);
       }
     }
   }
