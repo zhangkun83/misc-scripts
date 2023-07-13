@@ -22,6 +22,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
@@ -167,15 +169,28 @@ public class JClock extends JFrame {
   }
 
   private void addMouseEvents() {
-    final JPopupMenu menu = new JPopupMenu();
+    final JPopupMenu popupMenu;
     JMenuItem miSetAlarm = new JMenuItem("Set Alarm ...");
     miSetAlarm.addActionListener((e) -> setAlarm());
-    JMenuItem miClose = new JMenuItem("Quit");
-    miClose.addActionListener((e) -> System.exit(0));
-    menu.add(miSetAlarm);
-    menu.add(alarmDisplay);
-    menu.addSeparator();
-    menu.add(miClose);
+
+    if (getOsType() == OsType.MAC) {
+      popupMenu = null;
+      System.setProperty("apple.laf.useScreenMenuBar", "true");
+      JMenuBar menuBar = new JMenuBar();
+      JMenu alarmMenu = new JMenu("Alarm");
+      alarmMenu.add(miSetAlarm);
+      alarmMenu.add(alarmDisplay);
+      menuBar.add(alarmMenu);
+      setJMenuBar(menuBar);
+    } else {
+      popupMenu = new JPopupMenu();
+      JMenuItem miClose = new JMenuItem("Quit");
+      miClose.addActionListener((e) -> System.exit(0));
+      popupMenu.add(miSetAlarm);
+      popupMenu.add(alarmDisplay);
+      popupMenu.addSeparator();
+      popupMenu.add(miClose);
+    }
     MouseAdapter mouseListener = new MouseAdapter() {
         boolean isDragging = false;
         Point mouseClickPoint; // Will reference to the last pressing (not clicking) position
@@ -198,8 +213,8 @@ public class JClock extends JFrame {
         }
 
         private void maybeShowMenu(MouseEvent e) {
-          if (e.isPopupTrigger()) {
-            menu.show(e.getComponent(), e.getX(), e.getY());
+          if (popupMenu != null && e.isPopupTrigger()) {
+            popupMenu.show(e.getComponent(), e.getX(), e.getY());
           }
         }
 
@@ -234,16 +249,33 @@ public class JClock extends JFrame {
         (int) (cap(p.getY(), 0, screenSize.getHeight() - size.getHeight())));
   }
 
-  private static String getFontForSystem() {
+  private enum OsType {
+    WINDOWS, LINUX, MAC, OTHER
+  }
+
+  private static OsType getOsType() {
     String os = System.getProperty("os.name").toLowerCase();
     if (os.indexOf("win") >= 0) {
-      return "Courier New";
+      return OsType.WINDOWS;
     } else if (os.indexOf("mac") >= 0) {
-      return "Courier New";
+      return OsType.MAC;
     } else if (os.indexOf("linux") >= 0) {
-      return "Noto Mono";
+      return OsType.LINUX;
     } else {
-      return Font.MONOSPACED;
+      return OsType.OTHER;
+    }
+  }    
+
+  private static String getFontForSystem() {
+    switch (getOsType()) {
+      case WINDOWS:
+        return "Courier New";
+      case MAC:
+        return "Courier New";
+      case LINUX:
+        return "Noto Mono";
+      default:
+        return Font.MONOSPACED;
     }
   }
 
