@@ -28,6 +28,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.Timer;
+import javax.swing.ToolTipManager;
+import javax.swing.UIManager;
 
 /**
  * A minimalist digital clock that is always visible
@@ -316,8 +318,9 @@ public class JClock extends JFrame {
           new SimpleDateFormat(formatString).format(new Date()));
       pack();
       showColon = !showColon;
-      alarmDisplay.setText(
-          "Alarm: " + formatTimeForDisplay(alarmNotifier.alarm, LocalDateTime.now()));
+      String alarmInfo = "Alarm: " + formatTimeForDisplay(alarmNotifier.alarm, LocalDateTime.now());
+      alarmDisplay.setText(alarmInfo);
+      content.setToolTipText(alarmInfo);
 
       // Make sure the window is still visible (in case screen resolution has changed etc).
       Point location = getLocationOnScreen();
@@ -346,6 +349,13 @@ public class JClock extends JFrame {
   }
 
   public static void main(String[] args) {
+    ToolTipManager toolTipManager = ToolTipManager.sharedInstance();
+    toolTipManager.setEnabled(true);
+    // By default tooltips are displayed only for active (focused) windows.  This option will make
+    // tooltips displayed for all windows regardless of focus.
+    UIManager.put("ToolTipManager.enableToolTipMode", "allWindows");
+    toolTipManager.setInitialDelay(0);
+    toolTipManager.setDismissDelay(Integer.MAX_VALUE);
     JClock instance = new JClock();
     instance.start();
   }
