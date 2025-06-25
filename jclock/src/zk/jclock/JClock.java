@@ -55,7 +55,7 @@ public class JClock extends JFrame {
     setLayout(new FlowLayout(FlowLayout.CENTER, 2, 2));
     getContentPane().setBackground(BG_NORMAL);
     content = new JLabel("");
-    content.setFont(new Font(getFontForSystem(), Font.BOLD, 12));
+    content.setFont(new Font(getFontForSystem(), Font.BOLD, 13));
     content.setForeground(Color.GREEN);
     add(content);
 
@@ -271,11 +271,11 @@ public class JClock extends JFrame {
   private static String getFontForSystem() {
     switch (getOsType()) {
       case WINDOWS:
-        return "Courier New";
+        return "Aporetic Sans Mono";
       case MAC:
-        return "Courier New";
+        return "Aporetic Sans Mono";
       case LINUX:
-        return "Noto Mono";
+        return "Aporetic Sans Mono";
       default:
         return Font.MONOSPACED;
     }
