@@ -48,6 +48,9 @@ public class JClock extends JFrame {
   private final JLabel content;
   private final JMenuItem alarmDisplay;
   private final AlarmNotifier alarmNotifier = new AlarmNotifier();
+  private final ContentUpdater updater = new ContentUpdater();
+  private final Timer updateTimer = new Timer(1000, updater);
+  private final Timer alarmNotifierTimer = new Timer(750, alarmNotifier);
 
   private JClock() {
     // This will make the window skip the window switcher and on all virtual desktops
@@ -81,8 +84,17 @@ public class JClock extends JFrame {
       e.printStackTrace();
       setAlarm();
     }
-    new Timer(1000, updater).start();
-    new Timer(750, alarmNotifier).start();
+    updateTimer.start();
+    alarmNotifierTimer.start();
+  }
+
+  private void recreateWindow() {
+    updateTimer.stop();
+    alarmNotifierTimer.stop();
+    dispose();
+    JClock newInstance = new JClock();
+    newInstance.start();
+    JOptionPane.showMessageDialog(null, "jclock window was recreated");
   }
 
   private void setAlarm() {
@@ -186,11 +198,14 @@ public class JClock extends JFrame {
       setJMenuBar(menuBar);
     } else {
       popupMenu = new JPopupMenu();
+      JMenuItem miRecreate = new JMenuItem("Recreate window");
+      miRecreate.addActionListener((e) -> recreateWindow());
       JMenuItem miClose = new JMenuItem("Quit");
       miClose.addActionListener((e) -> System.exit(0));
       popupMenu.add(miSetAlarm);
       popupMenu.add(alarmDisplay);
       popupMenu.addSeparator();
+      popupMenu.add(miRecreate);
       popupMenu.add(miClose);
     }
     MouseAdapter mouseListener = new MouseAdapter() {
