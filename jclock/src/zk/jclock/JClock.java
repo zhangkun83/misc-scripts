@@ -30,6 +30,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.Timer;
 import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
+import java.lang.reflect.Method;
 
 /**
  * A minimalist digital clock that is always visible
@@ -72,6 +73,11 @@ public class JClock extends JFrame {
     addMouseEvents();
     Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
     setLocation(new Point((int) (screenSize.getWidth() * 3 / 4), 0));
+
+    if (getOsType() == OsType.LINUX) {
+      // Attempt to make the window sticky across all workspaces on Linux
+      makeWindowStickyOnLinux();
+    }
   }
 
   private void start() {
@@ -281,7 +287,7 @@ public class JClock extends JFrame {
     } else {
       return OsType.OTHER;
     }
-  }    
+  }
 
   private static String getFontForSystem() {
     switch (getOsType()) {
@@ -293,6 +299,49 @@ public class JClock extends JFrame {
         return "Aporetic Sans Mono";
       default:
         return Font.MONOSPACED;
+    }
+  }
+
+  // Attempts to make the window sticky across all workspaces on Linux using reflection.
+  // This uses internal APIs and is non-portable and fragile.
+  private void makeWindowStickyOnLinux() {
+    if (getOsType() != OsType.LINUX) {
+      throw new AssertionError("Unexpected OsType: " + getOsType());
+    }
+    try {
+      // Get the native window handle (XID) for the JFrame.
+      // This uses sun.awt.X11.XlibWrapper which is an internal API.
+      Class<?> xlibWrapperClass = Class.forName("sun.awt.X11.XlibWrapper");
+      Method getWindowMethod = xlibWrapperClass.getMethod(
+          "Window_From_awtWindow", java.awt.Window.class);
+      long xid = (long) getWindowMethod.invoke(null, this); // 'this' is the JFrame
+
+      // Access XWM to set the _NET_WM_STATE_STICKY atom.
+      Class<?> xwmClass = Class.forName("sun.awt.X11.XWM");
+      Method setNetWMStateMethod = xwmClass.getDeclaredMethod(
+          "setNetWMState", long.class, int.class, int.class, long.class, int.class);
+      setNetWMStateMethod.setAccessible(true); // Make method accessible
+
+      // Get atoms for _NET_WM_STATE and _NET_WM_STATE_STICKY.
+      Class<?> xatomClass = Class.forName("sun.awt.X11.XAtom");
+      Method getAtomMethod = xatomClass.getMethod("get", String.class);
+      long netWMStateAtom = (long) getAtomMethod.invoke(null, "_NET_WM_STATE");
+      long netWMStateStickyAtom = (long) getAtomMethod.invoke(null, "_NET_WM_STATE_STICKY");
+
+      // _NET_WM_STATE_ADD (constant from Xclient.java for adding a state)
+      // Value is typically 1 (seen in OpenJDK source).
+      int _NET_WM_STATE_ADD = 1;
+
+      // Invoke setNetWMState to add the _NET_WM_STATE_STICKY property to the window.
+      setNetWMStateMethod.invoke(
+          null, xid, _NET_WM_STATE_ADD, netWMStateStickyAtom, 0L, 0);
+
+      System.err.println("Attempted to set _NET_WM_STATE_STICKY for JClock.");
+    } catch (Throwable e) {
+      // Catch Throwable to ensure all errors (e.g., ClassNotFoundException) are caught.
+      System.err.println("Failed to set _NET_WM_STATE_STICKY (non-fatal, internal API usage): "
+          + e.getMessage());
+      e.printStackTrace();
     }
   }
 
