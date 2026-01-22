@@ -1,0 +1,3 @@
+#!/bin/bash
+wmctrl -x -r "zk-jclock-JClock" -b add,sticky
+
