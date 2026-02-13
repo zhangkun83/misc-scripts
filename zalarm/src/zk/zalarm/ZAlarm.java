@@ -11,6 +11,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.event.WindowFocusListener;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -163,6 +164,18 @@ public class ZAlarm {
           }
         });
 
+      addWindowFocusListener(new WindowFocusListener() {
+          @Override
+          public void windowGainedFocus(WindowEvent e) {
+            frameHasFocus = true;
+          }
+
+          @Override
+          public void windowLostFocus(WindowEvent e) {
+            frameHasFocus = false;
+          }
+        });
+
       JPanel clockPanel = new FixedWidthPanel();
       clockPanel.setBorder(createEmptyPanelBorder());
       clockPanel.setLayout(new BoxLayout(clockPanel, BoxLayout.Y_AXIS));
@@ -282,10 +295,20 @@ public class ZAlarm {
   }
 
   private class AlarmNotifier implements ActionListener {
+    private static final Duration NUDGE_INTERVAL = Duration.ofSeconds(10);
     boolean lighted;
 
     @Override
     public void actionPerformed(ActionEvent evt) {
+      if (!frameHasFocus
+          && alarm.isExpired()
+          && Duration.between(
+              lastNudgeTime, LocalDateTime.now()).compareTo(NUDGE_INTERVAL) > 0) {
+        mainFrame.toFront();
+        mainFrame.requestFocus();
+        lastNudgeTime = LocalDateTime.now();
+      }
+
       if (alarm.isExpired() || lighted) {
         lighted = !lighted;
         JLabel alarmLabel = mainFrame.alarmLabel;
@@ -304,6 +327,8 @@ public class ZAlarm {
   private final AlarmNotifier alarmNotifier = new AlarmNotifier();
   private MainFrame mainFrame;
   private AlarmInfo alarm = new AlarmInfo();
+  private LocalDateTime lastNudgeTime = LocalDateTime.now();
+  private boolean frameHasFocus;
 
   private static class AlarmInfo {
     final LocalDateTime time;
@@ -377,9 +402,12 @@ public class ZAlarm {
       System.err.println("Could not save alarm: " + e);
     }
   }
-  
+
   private void start() {
     mainFrame = new MainFrame();
+    contentUpdater.update();
+    mainFrame.pack();
+    mainFrame.setVisible(true);
     AlarmInfo savedAlarm;
     try {
       savedAlarm = readAlarmFromFile();
@@ -388,9 +416,6 @@ public class ZAlarm {
       savedAlarm = new AlarmInfo();
     }
     setAlarm(savedAlarm);
-    contentUpdater.update();
-    mainFrame.pack();
-    mainFrame.setVisible(true);
     Timer updateTimer = new Timer(1000, contentUpdater);
     updateTimer.start();
     Timer alarmNotifierTimer = new Timer(750, alarmNotifier);
