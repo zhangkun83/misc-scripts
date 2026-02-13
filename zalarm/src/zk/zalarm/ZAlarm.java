@@ -8,6 +8,7 @@ import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -20,14 +21,21 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.ActionMap;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.InputMap;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.Timer;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
@@ -38,6 +46,7 @@ import javax.swing.border.EtchedBorder;
 public class ZAlarm {
   private static final String DATE_FORMAT = "E, MMM dd";
   private static final String TIME_FORMAT = "HH:mm";
+  private static final Color BG_LIGHTED = Color.YELLOW;
   private static final DateTimeFormatter dateTimeFormatterDate =
       DateTimeFormatter.ofPattern(DATE_FORMAT);
   private static final DateTimeFormatter dateTimeFormatterShort =
@@ -79,7 +88,7 @@ public class ZAlarm {
     if (formattedDate.equals(dateTimeFormatterDate.format(now))) {
       dateString = "";
     } else if (formattedDate.equals(dateTimeFormatterDate.format(now.plusDays(1)))) {
-      dateString = "tomorrow ";
+      dateString = "(+1d) ";
     } else {
       dateString = formattedDate + " ";
     }
@@ -124,6 +133,7 @@ public class ZAlarm {
     final JLabel alarmMessageLabel;
     final JButton setAlarmButton;
     final JButton setAlarmSubmitButton;
+    final JButton setAlarmCancelButton;
     final JPanel setAlarmPanel;
     final JTextField setAlarmInput;
     final JTextField setAlarmMessageInput;
@@ -132,7 +142,7 @@ public class ZAlarm {
       Container contentPane = getContentPane();
       setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
       setIconImage(icon);
-      setResizable(true);
+      setResizable(false);
       setTitle("Z Alarm");
 
       JPanel clockPanel = new FixedWidthPanel();
@@ -151,7 +161,6 @@ public class ZAlarm {
       alarmLabel.setFont(timeFont);
       alarmPanel.add(setAlarmButton = new JButton("Set"));
       add(alarmPanel);
-      getRootPane().setDefaultButton(setAlarmButton);
 
       setAlarmPanel = new FixedWidthPanel();
       setAlarmPanel.setBorder(createEmptyPanelBorder());
@@ -161,13 +170,24 @@ public class ZAlarm {
       setAlarmPanel.add(Box.createVerticalStrut(5));
       setAlarmPanel.add(new JLabel("Message (optional)"));
       setAlarmPanel.add(setAlarmMessageInput = new JTextField());
-      setAlarmPanel.add(setAlarmSubmitButton = new JButton("Submit"));
+      setAlarmPanel.add(Box.createVerticalStrut(5));
+      setAlarmPanel.add(setAlarmSubmitButton = new JButton("OK"));
+      setAlarmPanel.add(Box.createVerticalStrut(5));
+      setAlarmPanel.add(setAlarmCancelButton = new JButton("Cancel"));
       add(setAlarmPanel);
-      setAlarmPanel.setVisible(false);
+
+      hideSetAlarmPanel();
 
       setAlarmButton.addActionListener(new ActionListener() {
           @Override
           public void actionPerformed(ActionEvent e) {
+            if (alarm.isExpired()) {
+              setAlarmInput.setText("+30");
+              setAlarmMessageInput.setText("");
+            } else {
+              setAlarmInput.setText("");
+              setAlarmMessageInput.setText(alarm.message);
+            }
             setAlarmButton.setEnabled(false);
             setAlarmPanel.setVisible(true);
             setAlarmInput.requestFocusInWindow();
@@ -178,15 +198,46 @@ public class ZAlarm {
 
       setAlarmSubmitButton.addActionListener(new ActionListener() {
           @Override
-          public void actionPerformed(ActionEvent e) {
-            setAlarmPanel.setVisible(false);
-            setAlarmButton.setEnabled(true);
-            getRootPane().setDefaultButton(setAlarmButton);
+          public void actionPerformed(ActionEvent ae) {
+            try {
+              applyNewAlarm(setAlarmInput.getText(), setAlarmMessageInput.getText());
+              hideSetAlarmPanel();
+              pack();
+            } catch (Exception e) {
+              JOptionPane.showMessageDialog(
+                  null, "Malformed input", "Set Alarm", JOptionPane.ERROR_MESSAGE);
+            }
+          }
+        });
+
+      setAlarmCancelButton.addActionListener(new ActionListener() {
+          @Override
+          public void actionPerformed(ActionEvent ae) {
+            hideSetAlarmPanel();
             pack();
           }
         });
+
+      // Bind Escape key to the "Cancel" button
+      Action cancelAction = new AbstractAction() {
+          @Override
+          public void actionPerformed(ActionEvent e) {
+            setAlarmCancelButton.doClick(); // Trigger the button's action listeners
+          }
+        };
+      InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+      ActionMap actionMap = rootPane.getActionMap();
+      inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "cancel");
+      actionMap.put("cancel", cancelAction);      
+    }
+
+    private void hideSetAlarmPanel() {
+      setAlarmPanel.setVisible(false);
+      setAlarmButton.setEnabled(true);
+      getRootPane().setDefaultButton(setAlarmButton);
     }
   }
+
 
   class ContentUpdater implements ActionListener {
     boolean showColon;
@@ -208,11 +259,31 @@ public class ZAlarm {
 
       String alarmInfo = formatTimeForDisplay(alarm.time, LocalDateTime.now());
       mainFrame.alarmLabel.setText(alarmInfo);
-      mainFrame.alarmMessageLabel.setText(alarm.message);
+      mainFrame.alarmMessageLabel.setText(alarm.getDisplayedMessage());
+    }
+  }
+
+  private class AlarmNotifier implements ActionListener {
+    boolean lighted;
+
+    @Override
+    public void actionPerformed(ActionEvent evt) {
+      if (alarm.isExpired() || lighted) {
+        lighted = !lighted;
+        JLabel alarmLabel = mainFrame.alarmLabel;
+        if (lighted) {
+          alarmLabel.setBackground(BG_LIGHTED);
+          alarmLabel.setOpaque(true);
+        } else {
+          alarmLabel.setOpaque(false);
+          alarmLabel.setBackground(null);
+        }
+      }
     }
   }
 
   private final ContentUpdater contentUpdater = new ContentUpdater();
+  private final AlarmNotifier alarmNotifier = new AlarmNotifier();
   private MainFrame mainFrame;
   private AlarmInfo alarm = new AlarmInfo();
 
@@ -227,10 +298,58 @@ public class ZAlarm {
 
     AlarmInfo() {
       this.time = LocalDateTime.now();
-      this.message = "Alarm";
+      this.message = "";
+    }
+
+    String getDisplayedMessage() {
+      if (message.trim().length() == 0) {
+        return "Alarm";
+      } else {
+        return message.trim();
+      }
+    }
+
+    boolean isExpired() {
+      return LocalDateTime.now().compareTo(time) > 0;
     }
   }
-  
+
+  private void applyNewAlarm(String input, String messageInput) throws Exception {
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime newAlarm;
+    input = input.trim();
+    if (input.length() == 0) {
+      // Keep the original alarm time, possibly update the message
+      newAlarm = alarm.time;
+    } else if (input.startsWith("+")) {
+      // Relative minutes
+      int deltaMinutes = Integer.parseInt(input.substring(1));
+      newAlarm = now.plusMinutes(deltaMinutes);
+    } else if (input.startsWith(":")) {
+      // Minute part only
+      int minutePart = Integer.parseInt(input.substring(1));
+      newAlarm = LocalDateTime.of(
+          now.getYear(), now.getMonth(), now.getDayOfMonth(),
+          now.getHour(), minutePart);
+      if (minutePart <= now.getMinute()) {
+        // If the minute is in the past, set into the next hour
+        newAlarm = newAlarm.plusHours(1);
+      }
+    } else {
+      // Hour and minute
+      String[] split = input.split(":");
+      int hourPart = Integer.parseInt(split[0]);
+      int minutePart = Integer.parseInt(split[1]);
+      newAlarm = LocalDateTime.of(
+          now.getYear(), now.getMonth(), now.getDayOfMonth(),
+          hourPart, minutePart);
+      // If the time of day is in the past, set into the next day
+      if (newAlarm.compareTo(now) < 0) {
+        newAlarm = newAlarm.plusDays(1);
+      }
+    }
+    setAlarm(new AlarmInfo(newAlarm, messageInput));
+  }
 
   private void setAlarm(AlarmInfo newAlarm) {
     alarm = newAlarm;
@@ -256,6 +375,8 @@ public class ZAlarm {
     mainFrame.setVisible(true);
     Timer updateTimer = new Timer(1000, contentUpdater);
     updateTimer.start();
+    Timer alarmNotifierTimer = new Timer(750, alarmNotifier);
+    alarmNotifierTimer.start();
   }
 
   public static void main(String[] args) {
