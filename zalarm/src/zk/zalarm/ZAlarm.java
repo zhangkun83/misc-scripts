@@ -9,6 +9,7 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,7 +17,9 @@ import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -56,13 +59,18 @@ public class ZAlarm {
     return Paths.get(System.getProperty("user.home"), ".zalarm-save");
   }
 
-  private static LocalDateTime readTimeFromFile() throws Exception {
-    String content = new String(Files.readAllBytes(getAlarmDataFilePath()));
-    return LocalDateTime.parse(content, dateTimeFormatterFull);
+  private static AlarmInfo readAlarmFromFile() throws Exception {
+    List<String> lines = Files.readAllLines(getAlarmDataFilePath(), StandardCharsets.UTF_8);
+    return new AlarmInfo(
+        LocalDateTime.parse(lines.get(0), dateTimeFormatterFull),
+        lines.get(1));
   }
 
-  private static void writeTimeToFile(LocalDateTime time) throws IOException {
-    Files.write(getAlarmDataFilePath(), time.format(dateTimeFormatterFull).getBytes());
+  private static void writeAlarmToFile(AlarmInfo alarm) throws IOException {
+    Files.write(getAlarmDataFilePath(),
+        Arrays.asList(
+            alarm.time.format(dateTimeFormatterFull),
+            alarm.message));
   }
 
   private static String formatTimeForDisplay(LocalDateTime time, LocalDateTime now) {
@@ -113,6 +121,7 @@ public class ZAlarm {
     final JLabel dateLabel;
     final JLabel timeLabel;
     final JLabel alarmLabel;
+    final JLabel alarmMessageLabel;
     final JButton setAlarmButton;
     final JButton setAlarmSubmitButton;
     final JPanel setAlarmPanel;
@@ -137,7 +146,7 @@ public class ZAlarm {
       JPanel alarmPanel = new FixedWidthPanel();
       alarmPanel.setBorder(createEmptyPanelBorder());
       alarmPanel.setLayout(new BoxLayout(alarmPanel, BoxLayout.Y_AXIS));
-      alarmPanel.add(new JLabel("Alarm"));
+      alarmPanel.add(alarmMessageLabel = new JLabel());
       alarmPanel.add(alarmLabel = new JLabel());
       alarmLabel.setFont(timeFont);
       alarmPanel.add(setAlarmButton = new JButton("Set"));
@@ -197,20 +206,36 @@ public class ZAlarm {
       mainFrame.timeLabel.setText(clockFormat.format(date));
       showColon = !showColon;
 
-      String alarmInfo = formatTimeForDisplay(alarm, LocalDateTime.now());
+      String alarmInfo = formatTimeForDisplay(alarm.time, LocalDateTime.now());
       mainFrame.alarmLabel.setText(alarmInfo);
-
+      mainFrame.alarmMessageLabel.setText(alarm.message);
     }
   }
 
   private final ContentUpdater contentUpdater = new ContentUpdater();
   private MainFrame mainFrame;
-  private LocalDateTime alarm = LocalDateTime.now();
+  private AlarmInfo alarm = new AlarmInfo();
 
-  private void setAlarm(LocalDateTime time) {
-    alarm = time;
+  private static class AlarmInfo {
+    final LocalDateTime time;
+    final String message;
+
+    AlarmInfo(LocalDateTime time, String message) {
+      this.time = time;
+      this.message = message;
+    }
+
+    AlarmInfo() {
+      this.time = LocalDateTime.now();
+      this.message = "Alarm";
+    }
+  }
+  
+
+  private void setAlarm(AlarmInfo newAlarm) {
+    alarm = newAlarm;
     try {
-      writeTimeToFile(time);
+      writeAlarmToFile(newAlarm);
     } catch (IOException e) {
       System.err.println("Could not save alarm: " + e);
     }
@@ -218,12 +243,12 @@ public class ZAlarm {
   
   private void start() {
     mainFrame = new MainFrame();
-    LocalDateTime savedAlarm;
+    AlarmInfo savedAlarm;
     try {
-       savedAlarm = readTimeFromFile();
+      savedAlarm = readAlarmFromFile();
     } catch (Exception e) {
       System.err.println("Could not load saved alarm: " + e);
-      savedAlarm = LocalDateTime.now();
+      savedAlarm = new AlarmInfo();
     }
     setAlarm(savedAlarm);
     contentUpdater.update();
