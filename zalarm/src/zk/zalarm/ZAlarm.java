@@ -9,6 +9,8 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -145,6 +147,22 @@ public class ZAlarm {
       setResizable(false);
       setTitle("Z Alarm");
 
+      setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+      addWindowListener(new WindowAdapter() {
+          @Override
+          public void windowClosing(WindowEvent e) {
+            int confirmed = JOptionPane.showConfirmDialog(
+                MainFrame.this,
+                "Terminate Z Alarm?",
+                "Confirmation",
+                JOptionPane.YES_NO_OPTION);
+
+            if (confirmed == JOptionPane.YES_OPTION) {
+              System.exit(0);
+            }
+          }
+        });
+
       JPanel clockPanel = new FixedWidthPanel();
       clockPanel.setBorder(createEmptyPanelBorder());
       clockPanel.setLayout(new BoxLayout(clockPanel, BoxLayout.Y_AXIS));
@@ -205,7 +223,7 @@ public class ZAlarm {
               pack();
             } catch (Exception e) {
               JOptionPane.showMessageDialog(
-                  null, "Malformed input", "Set Alarm", JOptionPane.ERROR_MESSAGE);
+                  MainFrame.this, "Malformed input", "Set Alarm", JOptionPane.ERROR_MESSAGE);
             }
           }
         });
