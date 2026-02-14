@@ -8,6 +8,8 @@ import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -39,6 +41,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
@@ -206,12 +209,14 @@ public class ZAlarm {
       timeDescriptionLabel.setFont(textFont);
       setAlarmPanel.add(timeDescriptionLabel);
       setAlarmPanel.add(setAlarmInput = new JTextField());
+      setAlarmInput.addFocusListener(textFocusSelectAllListener);
       setAlarmInput.setFont(textFont);
       setAlarmPanel.add(Box.createVerticalStrut(5));
       JLabel messageDecriptionLabel = new JLabel("Message (optional)");
       messageDecriptionLabel.setFont(textFont);
       setAlarmPanel.add(messageDecriptionLabel);
       setAlarmPanel.add(setAlarmMessageInput = new JTextField());
+      setAlarmMessageInput.addFocusListener(textFocusSelectAllListener);
       setAlarmMessageInput.setFont(textFont);
       setAlarmPanel.add(Box.createVerticalStrut(5));
       setAlarmPanel.add(setAlarmSubmitButton = new JButton("OK"));
@@ -225,12 +230,11 @@ public class ZAlarm {
           @Override
           public void actionPerformed(ActionEvent e) {
             if (alarm.isExpired()) {
-              setAlarmInput.setText("+30");
-              setAlarmMessageInput.setText("");
+              setAlarmInput.setText("+5");
             } else {
-              setAlarmInput.setText("");
-              setAlarmMessageInput.setText(alarm.message);
+              setAlarmInput.setText(dateTimeFormatterShort.format(alarm.time));
             }
+            setAlarmMessageInput.setText(alarm.message);
             setAlarmButton.setEnabled(false);
             setAlarmPanel.setVisible(true);
             setAlarmInput.requestFocusInWindow();
@@ -314,7 +318,8 @@ public class ZAlarm {
     private static final Duration NUDGE_INTERVAL = Duration.ofSeconds(60);
     boolean lighted;
 
-    void update() {
+    @Override
+    public void actionPerformed(ActionEvent evt) {
       AlarmInfo alarm = ZAlarm.this.alarm;
       if (alarm.isExpired()
           && Duration.between(
@@ -345,15 +350,20 @@ public class ZAlarm {
         }
       }
     }
-
-    @Override
-    public void actionPerformed(ActionEvent evt) {
-      update();
-    }
   }
 
   private final ContentUpdater contentUpdater = new ContentUpdater();
   private final AlarmNotifier alarmNotifier = new AlarmNotifier();
+  private final FocusAdapter textFocusSelectAllListener =
+      new FocusAdapter() {
+        @Override
+        public void focusGained(FocusEvent e) {
+          if (e.getComponent() instanceof JTextField) {
+            JTextField textField = (JTextField) e.getComponent();
+            SwingUtilities.invokeLater(() -> textField.selectAll());
+          }
+        }
+      };
   private MainFrame mainFrame;
   private AlarmInfo alarm = new AlarmInfo();
   private LocalDateTime lastNudgeTime = LocalDateTime.MIN;
@@ -389,10 +399,7 @@ public class ZAlarm {
     LocalDateTime now = LocalDateTime.now();
     LocalDateTime newAlarm;
     input = input.trim();
-    if (input.length() == 0) {
-      // Keep the original alarm time, possibly update the message
-      newAlarm = alarm.time;
-    } else if (input.startsWith("+")) {
+    if (input.startsWith("+")) {
       // Relative minutes
       int deltaMinutes = Integer.parseInt(input.substring(1));
       newAlarm = now.plusMinutes(deltaMinutes);

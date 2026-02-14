@@ -74,7 +74,7 @@ class NudgerFrame extends JFrame {
 
     void update() {
       if (secondsLeft > 0) {
-        countDown.setText("auto closing in " + secondsLeft + "s");
+        countDown.setText("Will close in " + secondsLeft + "s");
       } else {
         countDownTimer.stop();
         dispose();
