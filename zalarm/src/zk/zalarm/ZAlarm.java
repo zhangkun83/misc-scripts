@@ -114,9 +114,9 @@ public class ZAlarm {
       deltaString = Long.toString(deltaHourPart) + "h" + deltaString;
     }
     if (delta.isNegative()) {
-      deltaString = deltaString + " ago";
+      deltaString = deltaString.length() > 0 ? deltaString + " ago" : "just now";
     } else {
-      deltaString = "in " + deltaString;
+      deltaString = deltaString.length() > 0 ? "in " + deltaString : "imminent";
     }
     return String.format(
         "%s%s (%s)",
