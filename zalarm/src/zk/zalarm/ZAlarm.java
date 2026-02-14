@@ -22,7 +22,9 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -51,11 +53,8 @@ import javax.swing.border.EtchedBorder;
  */
 public class ZAlarm {
   private static final String TITLE = "Z Alarm";
-  private static final String DATE_FORMAT = "E, MMM dd";
   private static final String TIME_FORMAT = "HH:mm";
   private static final Color BG_LIGHTED = Color.YELLOW;
-  private static final DateTimeFormatter dateTimeFormatterDate =
-      DateTimeFormatter.ofPattern(DATE_FORMAT);
   private static final DateTimeFormatter dateTimeFormatterShort =
       DateTimeFormatter.ofPattern(TIME_FORMAT);
   private static final DateTimeFormatter dateTimeFormatterFull =
@@ -92,14 +91,13 @@ public class ZAlarm {
   }
 
   private static String formatTimeForDisplay(LocalDateTime time, LocalDateTime now) {
-    String dateString;
-    String formattedDate = dateTimeFormatterDate.format(time);
-    if (formattedDate.equals(dateTimeFormatterDate.format(now))) {
-      dateString = "";
-    } else if (formattedDate.equals(dateTimeFormatterDate.format(now.plusDays(1)))) {
-      dateString = "(+1d)";
-    } else {
-      dateString = "(-1d)";
+    long dayDifference =
+        ChronoUnit.DAYS.between(now.with(LocalTime.MIN), time.with(LocalTime.MIN));
+    String dayString = "";
+    if (dayDifference > 0) {
+      dayString = "(+" + dayDifference + "d)";
+    } else if (dayDifference < 0) {
+      dayString = "(" + dayDifference + "d)";
     }
     Duration delta = Duration.between(now, time);
     long deltaMinutes = delta.toMinutes();
@@ -120,7 +118,7 @@ public class ZAlarm {
     }
     return String.format(
         "%s%s (%s)",
-        dateTimeFormatterShort.format(time), dateString, deltaString);
+        dateTimeFormatterShort.format(time), dayString, deltaString);
   }
 
   private static final int UI_WIDTH = 250;
