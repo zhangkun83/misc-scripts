@@ -58,7 +58,7 @@ public class ZAlarm {
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
   static final String MONO_FONT_FAMILY = "Aporetic Sans Mono";
   private static final Font timeFont = new Font(MONO_FONT_FAMILY, Font.BOLD, 20);
-  private static final Font textFont = new Font(MONO_FONT_FAMILY, Font.BOLD, 13);
+  private static final Font textFont = new Font(MONO_FONT_FAMILY, Font.PLAIN, 13);
   private final Image icon;
 
   ZAlarm() {
