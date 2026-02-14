@@ -169,12 +169,12 @@ public class ZAlarm {
       addWindowFocusListener(new WindowFocusListener() {
           @Override
           public void windowGainedFocus(WindowEvent e) {
-            lastNudgeTime = LocalDateTime.now();
+            resetNudging();
           }
 
           @Override
           public void windowLostFocus(WindowEvent e) {
-            lastNudgeTime = LocalDateTime.now();
+            resetNudging();
           }
         });
 
@@ -320,7 +320,7 @@ public class ZAlarm {
         }
         new NudgerFrame("Z Alarm", message, 10);
         mainFrame.requestFocus();
-        lastNudgeTime = LocalDateTime.now();
+        resetNudging();
       }
 
       if (alarm.isExpired() || lighted) {
@@ -346,7 +346,7 @@ public class ZAlarm {
   private final AlarmNotifier alarmNotifier = new AlarmNotifier();
   private MainFrame mainFrame;
   private AlarmInfo alarm = new AlarmInfo();
-  private LocalDateTime lastNudgeTime = LocalDateTime.now();
+  private LocalDateTime lastNudgeTime = LocalDateTime.MIN;
 
   private static class AlarmInfo {
     final LocalDateTime time;
@@ -422,7 +422,9 @@ public class ZAlarm {
   }
 
   private void resetNudging() {
-    lastNudgeTime = LocalDateTime.now();
+    if (alarm.isExpired()) {
+      lastNudgeTime = LocalDateTime.now();
+    }
   }
 
   private void start() {
