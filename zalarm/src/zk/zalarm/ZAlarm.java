@@ -304,6 +304,7 @@ public class ZAlarm {
       showColon = !showColon;
 
       String alarmInfo = formatTimeForDisplay(alarm.time, LocalDateTime.now());
+      mainFrame.setTitle(TITLE + " *" + alarmInfo);
       alarmInfo =
           "<html><nobr>"
           + alarmInfo
@@ -311,7 +312,6 @@ public class ZAlarm {
               .replaceAll("\\)", ")</span>")
           + "</nobr></html>";
       mainFrame.alarmLabel.setText(alarmInfo);
-      mainFrame.setTitle(TITLE + " *" + alarmInfo);
       // <html> to allow wrapping text in JLabel
       mainFrame.alarmMessageLabel.setText(
           "<html>" + alarm.getDisplayedMessage() +"</html>");
