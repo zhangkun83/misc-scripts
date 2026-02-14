@@ -435,6 +435,7 @@ public class ZAlarm {
 
   private void setAlarm(AlarmInfo newAlarm) {
     alarm = newAlarm;
+    lastNudgeTime = LocalDateTime.MIN;
     try {
       writeAlarmToFile(newAlarm);
     } catch (IOException e) {
