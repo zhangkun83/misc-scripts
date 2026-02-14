@@ -147,7 +147,7 @@ public class ZAlarm {
       Container contentPane = getContentPane();
       setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
       setIconImage(icon);
-      setResizable(true);
+      setResizable(false);
       setTitle("Z Alarm");
 
       setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -169,6 +169,7 @@ public class ZAlarm {
       addWindowFocusListener(new WindowFocusListener() {
           @Override
           public void windowGainedFocus(WindowEvent e) {
+            pack();
             resetNudging();
           }
 
