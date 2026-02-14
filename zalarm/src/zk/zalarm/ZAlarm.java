@@ -56,7 +56,9 @@ public class ZAlarm {
       DateTimeFormatter.ofPattern(TIME_FORMAT);
   private static final DateTimeFormatter dateTimeFormatterFull =
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-  private static final Font timeFont = new Font("Aporetic Sans Mono", Font.BOLD, 20);
+  static final String MONO_FONT_FAMILY = "Aporetic Sans Mono";
+  private static final Font timeFont = new Font(MONO_FONT_FAMILY, Font.BOLD, 20);
+  private static final Font textFont = new Font(MONO_FONT_FAMILY, Font.BOLD, 13);
   private final Image icon;
 
   ZAlarm() {
@@ -167,12 +169,12 @@ public class ZAlarm {
       addWindowFocusListener(new WindowFocusListener() {
           @Override
           public void windowGainedFocus(WindowEvent e) {
-            frameHasFocus = true;
+            lastNudgeTime = LocalDateTime.now();
           }
 
           @Override
           public void windowLostFocus(WindowEvent e) {
-            frameHasFocus = false;
+            lastNudgeTime = LocalDateTime.now();
           }
         });
 
@@ -181,6 +183,7 @@ public class ZAlarm {
       clockPanel.setLayout(new BoxLayout(clockPanel, BoxLayout.Y_AXIS));
       clockPanel.add(dateLabel = new JLabel());
       clockPanel.add(timeLabel = new JLabel());
+      dateLabel.setFont(textFont);
       timeLabel.setFont(timeFont);
       add(clockPanel);
  
@@ -189,6 +192,7 @@ public class ZAlarm {
       alarmPanel.setLayout(new BoxLayout(alarmPanel, BoxLayout.Y_AXIS));
       alarmPanel.add(alarmMessageLabel = new JLabel());
       alarmPanel.add(alarmLabel = new JLabel());
+      alarmMessageLabel.setFont(textFont);
       alarmLabel.setFont(timeFont);
       alarmPanel.add(setAlarmButton = new JButton("Set"));
       add(alarmPanel);
@@ -196,11 +200,17 @@ public class ZAlarm {
       setAlarmPanel = new FixedWidthPanel();
       setAlarmPanel.setBorder(createEmptyPanelBorder());
       setAlarmPanel.setLayout(new BoxLayout(setAlarmPanel, BoxLayout.Y_AXIS));
-      setAlarmPanel.add(new JLabel("Time (\"HH:MM\", \"+MM\", or \":MM\")"));
+      JLabel timeDescriptionLabel = new JLabel("Time (\"HH:MM\", \"+MM\", or \":MM\")");
+      timeDescriptionLabel.setFont(textFont);
+      setAlarmPanel.add(timeDescriptionLabel);
       setAlarmPanel.add(setAlarmInput = new JTextField());
+      setAlarmInput.setFont(textFont);
       setAlarmPanel.add(Box.createVerticalStrut(5));
-      setAlarmPanel.add(new JLabel("Message (optional)"));
+      JLabel messageDecriptionLabel = new JLabel("Message (optional)");
+      messageDecriptionLabel.setFont(textFont);
+      setAlarmPanel.add(messageDecriptionLabel);
       setAlarmPanel.add(setAlarmMessageInput = new JTextField());
+      setAlarmMessageInput.setFont(textFont);
       setAlarmPanel.add(Box.createVerticalStrut(5));
       setAlarmPanel.add(setAlarmSubmitButton = new JButton("OK"));
       setAlarmPanel.add(Box.createVerticalStrut(5));
@@ -295,16 +305,19 @@ public class ZAlarm {
   }
 
   private class AlarmNotifier implements ActionListener {
-    private static final Duration NUDGE_INTERVAL = Duration.ofSeconds(10);
+    private static final Duration NUDGE_INTERVAL = Duration.ofSeconds(60);
     boolean lighted;
 
-    @Override
-    public void actionPerformed(ActionEvent evt) {
-      if (!frameHasFocus
-          && alarm.isExpired()
+    void update() {
+      AlarmInfo alarm = ZAlarm.this.alarm;
+      if (alarm.isExpired()
           && Duration.between(
               lastNudgeTime, LocalDateTime.now()).compareTo(NUDGE_INTERVAL) > 0) {
-        mainFrame.toFront();
+        String message = formatTimeForDisplay(alarm.time, LocalDateTime.now());
+        if (alarm.message.length() > 0) {
+          message = alarm.message + "\n\n" + message;
+        }
+        new NudgerFrame("Z Alarm", message, 10);
         mainFrame.requestFocus();
         lastNudgeTime = LocalDateTime.now();
       }
@@ -321,6 +334,11 @@ public class ZAlarm {
         }
       }
     }
+
+    @Override
+    public void actionPerformed(ActionEvent evt) {
+      update();
+    }
   }
 
   private final ContentUpdater contentUpdater = new ContentUpdater();
@@ -328,7 +346,6 @@ public class ZAlarm {
   private MainFrame mainFrame;
   private AlarmInfo alarm = new AlarmInfo();
   private LocalDateTime lastNudgeTime = LocalDateTime.now();
-  private boolean frameHasFocus;
 
   private static class AlarmInfo {
     final LocalDateTime time;
@@ -403,11 +420,12 @@ public class ZAlarm {
     }
   }
 
+  private void resetNudging() {
+    lastNudgeTime = LocalDateTime.now();
+  }
+
   private void start() {
     mainFrame = new MainFrame();
-    contentUpdater.update();
-    mainFrame.pack();
-    mainFrame.setVisible(true);
     AlarmInfo savedAlarm;
     try {
       savedAlarm = readAlarmFromFile();
@@ -416,10 +434,14 @@ public class ZAlarm {
       savedAlarm = new AlarmInfo();
     }
     setAlarm(savedAlarm);
+    contentUpdater.update();
+    alarmNotifier.update();
+    mainFrame.pack();
     Timer updateTimer = new Timer(1000, contentUpdater);
     updateTimer.start();
     Timer alarmNotifierTimer = new Timer(750, alarmNotifier);
     alarmNotifierTimer.start();
+    mainFrame.setVisible(true);
   }
 
   public static void main(String[] args) {

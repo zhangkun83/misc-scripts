@@ -1,4 +1,4 @@
-zalarm.jar: src/zk/zalarm/ZAlarm.java
+zalarm.jar: $(shell find src -name '*.java')
 	javac -d compile $^ && cp icon.png compile/zk/zalarm/ && jar cfe $@ zk.zalarm.ZAlarm -C compile .
 clean:
 	rm -r zalarm.jar compile
