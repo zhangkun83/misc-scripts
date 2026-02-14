@@ -32,7 +32,7 @@ class NudgerFrame extends JFrame {
     setLayout(new BorderLayout(5, 5));
     getContentPane().setBackground(Color.YELLOW);
 
-    content = new JTextArea(message, 5, 30);
+    content = new JTextArea(message, 3, 50);
     content.setFont(new Font(ZAlarm.MONO_FONT_FAMILY, Font.PLAIN, 16));
     content.setEditable(false);
     content.setLineWrap(true);
@@ -74,7 +74,7 @@ class NudgerFrame extends JFrame {
 
     void update() {
       if (secondsLeft > 0) {
-        countDown.setText("Will close in " + secondsLeft + "s");
+        countDown.setText(secondsLeft + "s");
       } else {
         countDownTimer.stop();
         dispose();

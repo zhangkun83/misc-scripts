@@ -62,7 +62,7 @@ public class ZAlarm {
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
   static final String MONO_FONT_FAMILY = "Aporetic Sans Mono";
   private static final Font timeFont = new Font(MONO_FONT_FAMILY, Font.BOLD, 20);
-  private static final Font textFont = new Font(MONO_FONT_FAMILY, Font.PLAIN, 13);
+  private static final Font textFont = new Font(MONO_FONT_FAMILY, Font.BOLD, 13);
   private final Image icon;
 
   ZAlarm() {
@@ -97,9 +97,9 @@ public class ZAlarm {
     if (formattedDate.equals(dateTimeFormatterDate.format(now))) {
       dateString = "";
     } else if (formattedDate.equals(dateTimeFormatterDate.format(now.plusDays(1)))) {
-      dateString = "(+1d) ";
+      dateString = "(+1d)";
     } else {
-      dateString = formattedDate + " ";
+      dateString = "(-1d)";
     }
     Duration delta = Duration.between(now, time);
     long deltaMinutes = delta.toMinutes();
@@ -114,13 +114,13 @@ public class ZAlarm {
       deltaString = Long.toString(deltaHourPart) + "h" + deltaString;
     }
     if (delta.isNegative()) {
-      deltaString = "-" + deltaString;
+      deltaString = deltaString + " ago";
     } else {
-      deltaString = "+" + deltaString;
+      deltaString = "in " + deltaString;
     }
     return String.format(
         "%s%s (%s)",
-        dateString, dateTimeFormatterShort.format(time), deltaString);
+        dateTimeFormatterShort.format(time), dateString, deltaString);
   }
 
   private static final int UI_WIDTH = 250;
@@ -306,6 +306,12 @@ public class ZAlarm {
       showColon = !showColon;
 
       String alarmInfo = formatTimeForDisplay(alarm.time, LocalDateTime.now());
+      alarmInfo =
+          "<html><nobr>"
+          + alarmInfo
+              .replaceAll("\\(", "<span style='font-size: 10px;'>(")
+              .replaceAll("\\)", ")</span>")
+          + "</nobr></html>";
       mainFrame.alarmLabel.setText(alarmInfo);
       mainFrame.setTitle(TITLE + " *" + alarmInfo);
       // <html> to allow wrapping text in JLabel
@@ -328,11 +334,10 @@ public class ZAlarm {
         if (alarm.message.length() > 0) {
           message.append(alarm.message);
         } else {
-          message.append("Alarm expired.");
+          message.append("Alarm expired");
         }
         String alarmString = formatTimeForDisplay(alarm.time, LocalDateTime.now());
-        message.append("\n");
-        message.append("\n").append(alarmString);
+        message.append(" at ").append(alarmString);
         new NudgerFrame(TITLE, message.toString(), 40);
         mainFrame.requestFocus();
         resetNudging();
