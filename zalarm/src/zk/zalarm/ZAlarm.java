@@ -47,6 +47,7 @@ import javax.swing.border.EtchedBorder;
  * A desktop alarm program.
  */
 public class ZAlarm {
+  private static final String TITLE = "Z Alarm";
   private static final String DATE_FORMAT = "E, MMM dd";
   private static final String TIME_FORMAT = "HH:mm";
   private static final Color BG_LIGHTED = Color.YELLOW;
@@ -148,7 +149,7 @@ public class ZAlarm {
       setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
       setIconImage(icon);
       setResizable(false);
-      setTitle("Z Alarm");
+      setTitle(TITLE);
 
       setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
       addWindowListener(new WindowAdapter() {
@@ -302,6 +303,7 @@ public class ZAlarm {
 
       String alarmInfo = formatTimeForDisplay(alarm.time, LocalDateTime.now());
       mainFrame.alarmLabel.setText(alarmInfo);
+      mainFrame.setTitle(TITLE + " *" + alarmInfo);
       // <html> to allow wrapping text in JLabel
       mainFrame.alarmMessageLabel.setText(
           "<html>" + alarm.getDisplayedMessage() +"</html>");
@@ -317,11 +319,16 @@ public class ZAlarm {
       if (alarm.isExpired()
           && Duration.between(
               lastNudgeTime, LocalDateTime.now()).compareTo(NUDGE_INTERVAL) > 0) {
-        String message = formatTimeForDisplay(alarm.time, LocalDateTime.now());
+        StringBuilder message = new StringBuilder();
         if (alarm.message.length() > 0) {
-          message = alarm.message + "\n\n" + message;
+          message.append(alarm.message);
+        } else {
+          message.append("Alarm expired.");
         }
-        new NudgerFrame("Z Alarm", message, 40);
+        String alarmString = formatTimeForDisplay(alarm.time, LocalDateTime.now());
+        message.append("\n").append("-".repeat(alarmString.length()));
+        message.append("\n").append(alarmString);
+        new NudgerFrame(TITLE, message.toString(), 40);
         mainFrame.requestFocus();
         resetNudging();
       }
