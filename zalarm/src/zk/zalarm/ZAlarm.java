@@ -147,7 +147,7 @@ public class ZAlarm {
       Container contentPane = getContentPane();
       setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
       setIconImage(icon);
-      setResizable(false);
+      setResizable(true);
       setTitle("Z Alarm");
 
       setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -301,7 +301,9 @@ public class ZAlarm {
 
       String alarmInfo = formatTimeForDisplay(alarm.time, LocalDateTime.now());
       mainFrame.alarmLabel.setText(alarmInfo);
-      mainFrame.alarmMessageLabel.setText(alarm.getDisplayedMessage());
+      // <html> to allow wrapping text in JLabel
+      mainFrame.alarmMessageLabel.setText(
+          "<html>" + alarm.getDisplayedMessage() +"</html>");
     }
   }
 
