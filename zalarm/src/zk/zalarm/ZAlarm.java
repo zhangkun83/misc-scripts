@@ -331,7 +331,7 @@ public class ZAlarm {
           message.append("Alarm expired.");
         }
         String alarmString = formatTimeForDisplay(alarm.time, LocalDateTime.now());
-        message.append("\n").append("-".repeat(alarmString.length()));
+        message.append("\n");
         message.append("\n").append(alarmString);
         new NudgerFrame(TITLE, message.toString(), 40);
         mainFrame.requestFocus();
