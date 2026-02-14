@@ -321,7 +321,7 @@ public class ZAlarm {
         if (alarm.message.length() > 0) {
           message = alarm.message + "\n\n" + message;
         }
-        new NudgerFrame("Z Alarm", message, 10);
+        new NudgerFrame("Z Alarm", message, 40);
         mainFrame.requestFocus();
         resetNudging();
       }
