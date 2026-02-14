@@ -243,6 +243,7 @@ public class ZAlarm {
             try {
               applyNewAlarm(setAlarmInput.getText(), setAlarmMessageInput.getText());
               hideSetAlarmPanel();
+              contentUpdater.update();
               pack();
             } catch (Exception e) {
               JOptionPane.showMessageDialog(
@@ -435,7 +436,6 @@ public class ZAlarm {
     }
     setAlarm(savedAlarm);
     contentUpdater.update();
-    alarmNotifier.update();
     mainFrame.pack();
     Timer updateTimer = new Timer(1000, contentUpdater);
     updateTimer.start();
