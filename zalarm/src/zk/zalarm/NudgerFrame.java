@@ -9,6 +9,8 @@ import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import javax.swing.JFrame;
@@ -22,8 +24,11 @@ class NudgerFrame extends JFrame {
   private final JLabel countDown;
   private final CountDownTimerHandler countDownTimerHandler;
   private final Timer countDownTimer;
+  private final ZAlarm zalarm;
+  private static final int SNOOZE_TIME_MINUTES = 5;
 
-  NudgerFrame(String title, String message, int timeoutSeconds) {
+  NudgerFrame(ZAlarm zalarm, String title, String message, int timeoutSeconds) {
+    this.zalarm = zalarm;
     setTitle(title);
     Image icon = Toolkit.getDefaultToolkit().createImage(getClass().getResource("icon.png"));
     setType(Window.Type.UTILITY);
@@ -46,11 +51,19 @@ class NudgerFrame extends JFrame {
     countDown.setFont(new Font(ZAlarm.MONO_FONT_FAMILY, Font.PLAIN, 13));
     add(countDown, BorderLayout.PAGE_END);
 
-    setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
     setAlwaysOnTop(true);
     pack();
     setLocationRelativeTo(null);
     setVisible(true);
+
+    addWindowListener(new WindowAdapter() {
+        @Override
+        public void windowClosing(WindowEvent e) {
+          zalarm.snoozeNudger(SNOOZE_TIME_MINUTES * 60);
+          dispose();
+        }
+      });
 
     countDownTimerHandler = new CountDownTimerHandler(timeoutSeconds);
     countDownTimerHandler.update();
@@ -74,7 +87,9 @@ class NudgerFrame extends JFrame {
 
     void update() {
       if (secondsLeft > 0) {
-        countDown.setText(Integer.toString(secondsLeft));
+        countDown.setText(
+            "Disappearing in " + secondsLeft
+            + "s. Close me to snooze for " + SNOOZE_TIME_MINUTES + "m.");
       } else {
         countDownTimer.stop();
         dispose();

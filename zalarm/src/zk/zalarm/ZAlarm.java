@@ -172,13 +172,10 @@ public class ZAlarm {
           @Override
           public void windowGainedFocus(WindowEvent e) {
             pack();
-            resetNudging();
           }
 
           @Override
-          public void windowLostFocus(WindowEvent e) {
-            resetNudging();
-          }
+          public void windowLostFocus(WindowEvent e) {}
         });
 
       JPanel clockPanel = new FixedWidthPanel();
@@ -320,26 +317,27 @@ public class ZAlarm {
   }
 
   private class AlarmNotifier implements ActionListener {
-    private static final Duration NUDGE_INTERVAL = Duration.ofSeconds(300);
+    private static final int NUDGER_TIMEOUT_SECONDS = 50;
+    private static final int NUDGE_INTERVAL_SECONDS = NUDGER_TIMEOUT_SECONDS + 10;
+    private static final Duration NUDGE_INTERVAL = Duration.ofSeconds(NUDGE_INTERVAL_SECONDS);
     boolean lighted;
 
     @Override
     public void actionPerformed(ActionEvent evt) {
       AlarmInfo alarm = ZAlarm.this.alarm;
-      if (alarm.isExpired()
-          && Duration.between(
-              lastNudgeTime, LocalDateTime.now()).compareTo(NUDGE_INTERVAL) > 0) {
+      LocalDateTime now = LocalDateTime.now();
+      if (alarm.isExpired() && now.compareTo(nextNudgeTime) > 0) {
         StringBuilder message = new StringBuilder();
         if (alarm.message.length() > 0) {
           message.append(alarm.message);
         } else {
           message.append("Alarm expired");
         }
-        String alarmString = formatTimeForDisplay(alarm.time, LocalDateTime.now());
+        String alarmString = formatTimeForDisplay(alarm.time, now);
         message.append(" at ").append(alarmString);
-        new NudgerFrame(TITLE, message.toString(), 240);
+        new NudgerFrame(ZAlarm.this, TITLE, message.toString(), NUDGER_TIMEOUT_SECONDS);
         mainFrame.requestFocus();
-        resetNudging();
+        nextNudgeTime = now.plus(NUDGE_INTERVAL);
       }
 
       if (alarm.isExpired() || lighted) {
@@ -370,7 +368,7 @@ public class ZAlarm {
       };
   private MainFrame mainFrame;
   private AlarmInfo alarm = new AlarmInfo();
-  private LocalDateTime lastNudgeTime = LocalDateTime.MIN;
+  private LocalDateTime nextNudgeTime = LocalDateTime.MAX;
 
   private static class AlarmInfo {
     final LocalDateTime time;
@@ -433,19 +431,21 @@ public class ZAlarm {
     setAlarm(new AlarmInfo(newAlarm, messageInput));
   }
 
+  void snoozeNudger(int seconds) {
+    SwingUtilities.invokeLater(() -> {
+          if (alarm.isExpired()) {
+            nextNudgeTime = LocalDateTime.now().plusSeconds(seconds);
+          }
+        });
+  }
+
   private void setAlarm(AlarmInfo newAlarm) {
     alarm = newAlarm;
-    lastNudgeTime = LocalDateTime.MIN;
+    nextNudgeTime = LocalDateTime.MIN;
     try {
       writeAlarmToFile(newAlarm);
     } catch (IOException e) {
       System.err.println("Could not save alarm: " + e);
-    }
-  }
-
-  private void resetNudging() {
-    if (alarm.isExpired()) {
-      lastNudgeTime = LocalDateTime.now();
     }
   }
 
