@@ -228,11 +228,12 @@ public class ZAlarm {
           @Override
           public void actionPerformed(ActionEvent e) {
             if (alarm.isExpired()) {
-              setAlarmInput.setText("+5");
+              setAlarmInput.setText("+30");
+              setAlarmMessageInput.setText("");
             } else {
               setAlarmInput.setText(dateTimeFormatterShort.format(alarm.time));
+              setAlarmMessageInput.setText(alarm.message);
             }
-            setAlarmMessageInput.setText(alarm.message);
             setAlarmButton.setEnabled(false);
             setAlarmPanel.setVisible(true);
             setAlarmInput.requestFocusInWindow();
@@ -319,7 +320,7 @@ public class ZAlarm {
   }
 
   private class AlarmNotifier implements ActionListener {
-    private static final Duration NUDGE_INTERVAL = Duration.ofSeconds(60);
+    private static final Duration NUDGE_INTERVAL = Duration.ofSeconds(300);
     boolean lighted;
 
     @Override
@@ -336,7 +337,7 @@ public class ZAlarm {
         }
         String alarmString = formatTimeForDisplay(alarm.time, LocalDateTime.now());
         message.append(" at ").append(alarmString);
-        new NudgerFrame(TITLE, message.toString(), 40);
+        new NudgerFrame(TITLE, message.toString(), 240);
         mainFrame.requestFocus();
         resetNudging();
       }

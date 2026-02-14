@@ -74,7 +74,7 @@ class NudgerFrame extends JFrame {
 
     void update() {
       if (secondsLeft > 0) {
-        countDown.setText(secondsLeft + "s");
+        countDown.setText(Integer.toString(secondsLeft));
       } else {
         countDownTimer.stop();
         dispose();
