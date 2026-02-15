@@ -13,14 +13,13 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.Timer;
 
 class NudgerFrame extends JFrame {
-  private final JTextArea content;
+  private final JLabel content;
   private final JLabel countDown;
   private final CountDownTimerHandler countDownTimerHandler;
   private final Timer countDownTimer;
@@ -35,20 +34,18 @@ class NudgerFrame extends JFrame {
     setResizable(false);
     setIconImage(icon);
     setLayout(new BorderLayout(5, 5));
-    getContentPane().setBackground(Color.YELLOW);
 
-    content = new JTextArea(message, 3, 50);
+    content =
+        new JLabel("<html><div style='width: 250px;'>"
+            + HtmlEscape.escapeHtml(message) + "</div></html>");
     content.setFont(new Font(ZAlarm.MONO_FONT_FAMILY, Font.PLAIN, 16));
-    content.setEditable(false);
-    content.setLineWrap(true);
-    content.setWrapStyleWord(true);
-    content.setMargin(new Insets(5, 5, 5, 5));
-    JScrollPane jsp = new JScrollPane(content);
-    jsp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-    add(jsp, BorderLayout.CENTER);
+    content.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    add(content, BorderLayout.CENTER);
 
     countDown = new JLabel(" ", JLabel.CENTER);
     countDown.setFont(new Font(ZAlarm.MONO_FONT_FAMILY, Font.PLAIN, 13));
+    countDown.setBackground(Color.YELLOW);
+    countDown.setOpaque(true);
     add(countDown, BorderLayout.PAGE_END);
 
     setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);

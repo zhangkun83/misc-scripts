@@ -312,7 +312,7 @@ public class ZAlarm {
       mainFrame.alarmLabel.setText(alarmInfo);
       // <html> to allow wrapping text in JLabel
       mainFrame.alarmMessageLabel.setText(
-          "<html>" + alarm.getDisplayedMessage() +"</html>");
+          "<html>" + HtmlEscape.escapeHtml(alarm.getDisplayedMessage()) +"</html>");
     }
   }
 
