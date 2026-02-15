@@ -335,7 +335,10 @@ public class ZAlarm {
         }
         String alarmString = formatTimeForDisplay(alarm.time, now);
         message.append(" at ").append(alarmString);
-        new NudgerFrame(ZAlarm.this, "Alarm Expired", message.toString(), NUDGER_TIMEOUT_SECONDS);
+        disposeNudger();
+        currentNudger =
+            new NudgerFrame(
+                ZAlarm.this, "Alarm Expired", message.toString(), NUDGER_TIMEOUT_SECONDS);
         mainFrame.requestFocus();
         nextNudgeTime = now.plus(NUDGE_INTERVAL);
       }
@@ -369,6 +372,7 @@ public class ZAlarm {
   private MainFrame mainFrame;
   private AlarmInfo alarm = new AlarmInfo();
   private LocalDateTime nextNudgeTime = LocalDateTime.MAX;
+  private NudgerFrame currentNudger;
 
   private static class AlarmInfo {
     final LocalDateTime time;
@@ -439,9 +443,17 @@ public class ZAlarm {
         });
   }
 
+  void disposeNudger() {
+    NudgerFrame nudger = currentNudger;
+    if (nudger != null) {
+      nudger.dispose();
+    }
+  }
+
   private void setAlarm(AlarmInfo newAlarm) {
     alarm = newAlarm;
     nextNudgeTime = LocalDateTime.MIN;
+    disposeNudger();
     try {
       writeAlarmToFile(newAlarm);
     } catch (IOException e) {
