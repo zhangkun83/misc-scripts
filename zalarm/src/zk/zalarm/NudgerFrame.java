@@ -31,7 +31,7 @@ class NudgerFrame extends JFrame {
     this.zalarm = zalarm;
     setTitle(title);
     Image icon = Toolkit.getDefaultToolkit().createImage(getClass().getResource("icon.png"));
-    setType(Window.Type.UTILITY);
+    setType(Window.Type.NORMAL);
     setResizable(true);
     setIconImage(icon);
     setLayout(new BorderLayout(5, 5));
