@@ -32,7 +32,7 @@ class NudgerFrame extends JFrame {
     setTitle(title);
     Image icon = Toolkit.getDefaultToolkit().createImage(getClass().getResource("icon.png"));
     setType(Window.Type.NORMAL);
-    setResizable(true);
+    setResizable(false);
     setIconImage(icon);
     setLayout(new BorderLayout(5, 5));
     getContentPane().setBackground(Color.YELLOW);
