@@ -339,7 +339,6 @@ public class ZAlarm {
         currentNudger =
             new NudgerFrame(
                 ZAlarm.this, "Alarm Expired", message.toString(), NUDGER_TIMEOUT_SECONDS);
-        mainFrame.requestFocus();
         nextNudgeTime = now.plus(NUDGE_INTERVAL);
       }
 
