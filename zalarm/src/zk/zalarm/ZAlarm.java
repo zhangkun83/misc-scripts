@@ -60,8 +60,10 @@ public class ZAlarm {
   private static final DateTimeFormatter dateTimeFormatterFull =
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
   static final String MONO_FONT_FAMILY = "Aporetic Sans Mono";
-  private static final Font timeFont = new Font(MONO_FONT_FAMILY, Font.BOLD, 20);
-  private static final Font textFont = new Font(MONO_FONT_FAMILY, Font.BOLD, 13);
+  private static final Font LARGE_FONT_BOLD = new Font(MONO_FONT_FAMILY, Font.BOLD, 20);
+  private static final Font LARGE_FONT = new Font(MONO_FONT_FAMILY, Font.PLAIN, 20);
+  private static final Font FONT_BOLD = new Font(MONO_FONT_FAMILY, Font.BOLD, 13);
+  private static final Font FONT = new Font(MONO_FONT_FAMILY, Font.PLAIN, 13);
   private final Image icon;
 
   ZAlarm() {
@@ -181,10 +183,13 @@ public class ZAlarm {
       JPanel clockPanel = new FixedWidthPanel();
       clockPanel.setBorder(createEmptyPanelBorder());
       clockPanel.setLayout(new BoxLayout(clockPanel, BoxLayout.Y_AXIS));
-      clockPanel.add(dateLabel = new JLabel());
+      JLabel nowLabel = new JLabel("Now");
+      nowLabel.setFont(FONT);
+      clockPanel.add(nowLabel);
       clockPanel.add(timeLabel = new JLabel());
-      dateLabel.setFont(textFont);
-      timeLabel.setFont(timeFont);
+      clockPanel.add(dateLabel = new JLabel());
+      dateLabel.setFont(FONT);
+      timeLabel.setFont(LARGE_FONT);
       add(clockPanel);
  
       JPanel alarmPanel = new FixedWidthPanel();
@@ -192,31 +197,34 @@ public class ZAlarm {
       alarmPanel.setLayout(new BoxLayout(alarmPanel, BoxLayout.Y_AXIS));
       alarmPanel.add(alarmMessageLabel = new JLabel());
       alarmPanel.add(alarmLabel = new JLabel());
-      alarmMessageLabel.setFont(textFont);
-      alarmLabel.setFont(timeFont);
+      alarmMessageLabel.setFont(FONT_BOLD);
+      alarmLabel.setFont(LARGE_FONT_BOLD);
       alarmPanel.add(setAlarmButton = new JButton("Set"));
+      setAlarmButton.setFont(FONT);
       add(alarmPanel);
 
       setAlarmPanel = new FixedWidthPanel();
       setAlarmPanel.setBorder(createEmptyPanelBorder());
       setAlarmPanel.setLayout(new BoxLayout(setAlarmPanel, BoxLayout.Y_AXIS));
       JLabel timeDescriptionLabel = new JLabel("Time (\"HH:MM\", \"+MM\", or \":MM\")");
-      timeDescriptionLabel.setFont(textFont);
+      timeDescriptionLabel.setFont(FONT);
       setAlarmPanel.add(timeDescriptionLabel);
       setAlarmPanel.add(setAlarmInput = new JTextField());
       setAlarmInput.addFocusListener(textFocusSelectAllListener);
-      setAlarmInput.setFont(textFont);
+      setAlarmInput.setFont(FONT_BOLD);
       setAlarmPanel.add(Box.createVerticalStrut(5));
       JLabel messageDecriptionLabel = new JLabel("Message (optional)");
-      messageDecriptionLabel.setFont(textFont);
+      messageDecriptionLabel.setFont(FONT);
       setAlarmPanel.add(messageDecriptionLabel);
       setAlarmPanel.add(setAlarmMessageInput = new JTextField());
       setAlarmMessageInput.addFocusListener(textFocusSelectAllListener);
-      setAlarmMessageInput.setFont(textFont);
+      setAlarmMessageInput.setFont(FONT_BOLD);
       setAlarmPanel.add(Box.createVerticalStrut(5));
       setAlarmPanel.add(setAlarmSubmitButton = new JButton("OK"));
+      setAlarmSubmitButton.setFont(FONT);
       setAlarmPanel.add(Box.createVerticalStrut(5));
       setAlarmPanel.add(setAlarmCancelButton = new JButton("Cancel"));
+      setAlarmCancelButton.setFont(FONT);
       add(setAlarmPanel);
 
       hideSetAlarmPanel();

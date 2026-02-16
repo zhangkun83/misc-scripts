@@ -85,7 +85,7 @@ class NudgerFrame extends JFrame {
     void update() {
       if (secondsLeft > 0) {
         countDown.setText(
-            "(" + secondsLeft + ") Close me to snooze for " + SNOOZE_TIME_MINUTES + "m.");
+            "(" + secondsLeft + ") Close me to snooze for " + SNOOZE_TIME_MINUTES + " min.");
       } else {
         countDownTimer.stop();
         dispose();
