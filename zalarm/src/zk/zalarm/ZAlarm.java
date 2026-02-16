@@ -41,12 +41,19 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DocumentFilter;
+import javax.swing.text.DocumentFilter.FilterBypass;
 
 /**
  * A desktop alarm program.
@@ -143,6 +150,7 @@ public class ZAlarm {
     final JButton setAlarmButton;
     final JButton setAlarmSubmitButton;
     final JButton setAlarmCancelButton;
+    final JSeparator setAlarmSeparator;
     final JPanel setAlarmPanel;
     final JTextField setAlarmInput;
     final JTextField setAlarmMessageInput;
@@ -183,19 +191,23 @@ public class ZAlarm {
       JPanel clockPanel = new FixedWidthPanel();
       clockPanel.setBorder(createEmptyPanelBorder());
       clockPanel.setLayout(new BoxLayout(clockPanel, BoxLayout.Y_AXIS));
-      JLabel nowLabel = new JLabel("Now");
-      nowLabel.setFont(FONT);
+      JLabel nowLabel = new JLabel("NOW");
+      nowLabel.setFont(FONT_BOLD);
       clockPanel.add(nowLabel);
+      clockPanel.add(Box.createVerticalStrut(5));
       clockPanel.add(timeLabel = new JLabel());
       clockPanel.add(dateLabel = new JLabel());
       dateLabel.setFont(FONT);
       timeLabel.setFont(LARGE_FONT);
       add(clockPanel);
- 
+
+      add(new JSeparator(SwingConstants.HORIZONTAL));
+
       JPanel alarmPanel = new FixedWidthPanel();
       alarmPanel.setBorder(createEmptyPanelBorder());
       alarmPanel.setLayout(new BoxLayout(alarmPanel, BoxLayout.Y_AXIS));
       alarmPanel.add(alarmMessageLabel = new JLabel());
+      alarmPanel.add(Box.createVerticalStrut(5));
       alarmPanel.add(alarmLabel = new JLabel());
       alarmMessageLabel.setFont(FONT_BOLD);
       alarmLabel.setFont(LARGE_FONT_BOLD);
@@ -203,9 +215,16 @@ public class ZAlarm {
       setAlarmButton.setFont(FONT);
       add(alarmPanel);
 
+      setAlarmSeparator = new JSeparator(SwingConstants.HORIZONTAL);
+      add(setAlarmSeparator);
+
       setAlarmPanel = new FixedWidthPanel();
       setAlarmPanel.setBorder(createEmptyPanelBorder());
       setAlarmPanel.setLayout(new BoxLayout(setAlarmPanel, BoxLayout.Y_AXIS));
+      JLabel setTimerLabel = new JLabel("SET ALARM");
+      setTimerLabel.setFont(FONT_BOLD);
+      setAlarmPanel.add(setTimerLabel);
+      setAlarmPanel.add(Box.createVerticalStrut(5));
       JLabel timeDescriptionLabel = new JLabel("Time (\"HH:MM\", \"+MM\", or \":MM\")");
       timeDescriptionLabel.setFont(FONT);
       setAlarmPanel.add(timeDescriptionLabel);
@@ -219,6 +238,24 @@ public class ZAlarm {
       setAlarmPanel.add(setAlarmMessageInput = new JTextField());
       setAlarmMessageInput.addFocusListener(textFocusSelectAllListener);
       setAlarmMessageInput.setFont(FONT_BOLD);
+      // Auto-convert message input to upper case
+      ((AbstractDocument) setAlarmMessageInput.getDocument()).setDocumentFilter(
+          new DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset,
+                String string, AttributeSet attr)
+              throws BadLocationException {
+              super.insertString(fb, offset, string.toUpperCase(), attr);
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length,
+                String text, AttributeSet attrs)
+              throws BadLocationException {
+              super.replace(fb, offset, length, text.toUpperCase(), attrs);
+            }
+        });
+
       setAlarmPanel.add(Box.createVerticalStrut(5));
       setAlarmPanel.add(setAlarmSubmitButton = new JButton("OK"));
       setAlarmSubmitButton.setFont(FONT);
@@ -240,6 +277,7 @@ public class ZAlarm {
               setAlarmMessageInput.setText(alarm.message);
             }
             setAlarmButton.setEnabled(false);
+            setAlarmSeparator.setVisible(true);
             setAlarmPanel.setVisible(true);
             setAlarmInput.requestFocusInWindow();
             getRootPane().setDefaultButton(setAlarmSubmitButton);
@@ -284,6 +322,7 @@ public class ZAlarm {
     }
 
     private void hideSetAlarmPanel() {
+      setAlarmSeparator.setVisible(false);
       setAlarmPanel.setVisible(false);
       setAlarmButton.setEnabled(true);
       getRootPane().setDefaultButton(setAlarmButton);
@@ -336,11 +375,7 @@ public class ZAlarm {
       LocalDateTime now = LocalDateTime.now();
       if (alarm.isExpired() && now.compareTo(nextNudgeTime) > 0) {
         StringBuilder message = new StringBuilder();
-        if (alarm.message.length() > 0) {
-          message.append(alarm.message);
-        } else {
-          message.append("Alarm expired");
-        }
+        message.append(alarm.getDisplayedMessage());
         String alarmString = formatTimeForDisplay(alarm.time, now);
         message.append(" at ").append(alarmString);
         disposeNudger();
@@ -397,9 +432,9 @@ public class ZAlarm {
 
     String getDisplayedMessage() {
       if (message.trim().length() == 0) {
-        return "Alarm";
+        return "ALARM";
       } else {
-        return message.trim();
+        return message.trim().toUpperCase();
       }
     }
 
