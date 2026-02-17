@@ -349,7 +349,11 @@ public class ZAlarm {
       showColon = !showColon;
 
       String alarmInfo = formatTimeForDisplay(alarm.time, LocalDateTime.now());
-      mainFrame.setTitle(TITLE + " *" + alarmInfo);
+      String title = alarmInfo + " - " + TITLE;
+      if (alarm.isExpired()) {
+        title = "*" + title;
+      }
+      mainFrame.setTitle(title);
       alarmInfo =
           "<html><nobr>"
           + alarmInfo

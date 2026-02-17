@@ -40,12 +40,12 @@ class NudgerFrame extends JFrame {
             + HtmlEscape.escapeHtml(message) + "</div></html>");
     content.setFont(new Font(ZAlarm.MONO_FONT_FAMILY, Font.PLAIN, 16));
     content.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    content.setBackground(Color.YELLOW);
+    content.setOpaque(true);
     add(content, BorderLayout.CENTER);
 
     countDown = new JLabel(" ", JLabel.CENTER);
     countDown.setFont(new Font(ZAlarm.MONO_FONT_FAMILY, Font.PLAIN, 13));
-    countDown.setBackground(Color.YELLOW);
-    countDown.setOpaque(true);
     add(countDown, BorderLayout.PAGE_END);
 
     setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -85,7 +85,7 @@ class NudgerFrame extends JFrame {
     void update() {
       if (secondsLeft > 0) {
         countDown.setText(
-            "(" + secondsLeft + ") Close me to snooze for " + SNOOZE_TIME_MINUTES + " min.");
+            "(" + secondsLeft + ") close me to snooze for " + SNOOZE_TIME_MINUTES + " min.");
       } else {
         countDownTimer.stop();
         dispose();
