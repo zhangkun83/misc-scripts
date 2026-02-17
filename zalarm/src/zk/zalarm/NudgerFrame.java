@@ -60,10 +60,11 @@ class NudgerFrame extends JFrame {
     addWindowListener(new WindowAdapter() {
         @Override
         public void windowClosing(WindowEvent e) {
-          zalarm.snoozeNudger(SNOOZE_TIME_MINUTES * 60);
-          snoozeRequested.set(true);
-          secondsLeft.set(2);
-          SwingUtilities.invokeLater(countDownTimerHandler::update);
+          if (snoozeRequested.compareAndSet(false, true)) {
+            zalarm.snoozeNudger(SNOOZE_TIME_MINUTES * 60);
+            secondsLeft.set(2);
+            SwingUtilities.invokeLater(countDownTimerHandler::update);
+          }
         }
       });
 
