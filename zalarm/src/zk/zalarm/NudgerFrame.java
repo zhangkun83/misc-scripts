@@ -11,11 +11,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
 class NudgerFrame extends JFrame {
@@ -25,6 +26,8 @@ class NudgerFrame extends JFrame {
   private final Timer countDownTimer;
   private final ZAlarm zalarm;
   private static final int SNOOZE_TIME_MINUTES = 5;
+  private final AtomicBoolean snoozeRequested = new AtomicBoolean();
+  private final AtomicInteger secondsLeft = new AtomicInteger();
 
   NudgerFrame(ZAlarm zalarm, String title, String message, int timeoutSeconds) {
     this.zalarm = zalarm;
@@ -58,7 +61,9 @@ class NudgerFrame extends JFrame {
         @Override
         public void windowClosing(WindowEvent e) {
           zalarm.snoozeNudger(SNOOZE_TIME_MINUTES * 60);
-          dispose();
+          snoozeRequested.set(true);
+          secondsLeft.set(2);
+          SwingUtilities.invokeLater(countDownTimerHandler::update);
         }
       });
 
@@ -69,23 +74,23 @@ class NudgerFrame extends JFrame {
   }
 
   private class CountDownTimerHandler implements ActionListener {
-    int secondsLeft;
-    final LocalDateTime time = LocalDateTime.now();
-
     CountDownTimerHandler(int timeoutSeconds) {
-      secondsLeft = timeoutSeconds;
+      secondsLeft.set(timeoutSeconds);
     }
 
     @Override
     public void actionPerformed(ActionEvent evt) {
-      secondsLeft --;
+      secondsLeft.decrementAndGet();
       update();
     }
 
     void update() {
-      if (secondsLeft > 0) {
-        countDown.setText(
-            "(" + secondsLeft + ") close me to snooze for " + SNOOZE_TIME_MINUTES + " min.");
+      if (secondsLeft.get() > 0) {
+        if (snoozeRequested.get()) {
+          countDown.setText("Snoozing for " + SNOOZE_TIME_MINUTES + " minutes ...");
+        } else {
+          countDown.setText(secondsLeft.toString());
+        }
       } else {
         countDownTimer.stop();
         dispose();
