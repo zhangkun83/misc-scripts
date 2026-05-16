@@ -42,7 +42,11 @@ find "$SOURCE_DIR" -type f | while read -r FILE; do
     
     # Get relative path
     REL_PATH="${FILE#$SOURCE_DIR/}"
-    
+
+    # Remove spaces before and after directory names (FAT probably
+    # doesn't support it)
+    REL_PATH=$(echo "$REL_PATH" | sed -E 's| */ *|/|g; s|^ *||; s| *$||')
+
     # Create target directory path
     TARGET_FILE="$DEST_DIR/$REL_PATH.gpg"
     mkdir -p "$(dirname "$TARGET_FILE")"
