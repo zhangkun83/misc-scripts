@@ -7,8 +7,8 @@ revert() {
 trap revert HUP INT TERM
 
 # Turn on Display Power Management Signaling (+dpms) and set the
-# Standby, Suspend, and Off timers all to 5 seconds.
-xset +dpms dpms 5 5 5
+# Standby, Suspend, and Off timers all to 5 minutes.
+xset +dpms dpms 300 300 300
 
 # Run i3lock in the foreground and wait until the screen is unblocked
 i3lock -n
