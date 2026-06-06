@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# Disable the screen-blanking, standby, and power-off timers.
+revert() {
+    xset dpms 0 0 0
+}
+trap revert HUP INT TERM
+
+# Turn on Display Power Management Signaling (+dpms) and set the
+# Standby, Suspend, and Off timers all to 5 seconds.
+xset +dpms dpms 5 5 5
+
+# Run i3lock in the foreground and wait until the screen is unblocked
+i3lock -n
+
+# Restore normal screen operation.
+revert
